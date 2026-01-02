@@ -1,0 +1,163 @@
+*BRIEF MVP*
+
+*1) Público y dispositivos*
+	La web debe funcionar correctamente en:
+	* Navegadores desktop modernos.
+	* Navegadores móviles (Android / iOS).
+	* Diseño responsive, sin funcionalidades exclusivas de un dispositivo.
+	* Diseño similar a las muestras, no se exige diseño premium. Sí legibilidad, claridad y usabilidad.
+
+*2) Estructura visible para el usuario (Front)*
+	2.1 Home
+	Página de inicio simple.
+	Acceso visible al catálogo.
+	Puede incluir banners o secciones informativas simples.
+	Contenido editable por el admin.
+
+	2.2 Catálogo
+	Listado de productos disponibles.
+	Cada producto debe mostrar:
+		* Imagen principal.
+		* Título del producto.
+		* Precio unitario calculado según la regla de cantidad total del carrito (ver punto 6).
+		* Botón “Agregar al carrito”.
+		* Filtro por categorías.
+
+	2.3 Ficha de producto
+	Cada producto debe tener una página propia con:
+		* Galería de imágenes.
+		* Título.
+		* Descripción.
+		* Precio unitario (dinámico según regla de cantidad).
+		* Selector de talle.
+		* Stock por talle (S-M-L-XL-XXL-XXXL)
+		* Cada talle puede estar: Disponible (stock > 0). No disponible (stock = 0).
+		* El sistema no debe permitir agregar al carrito un talle sin stock.
+
+	2.4 Carrito
+	El carrito debe permitir:
+		* Ver productos agregados.
+		* Modificar cantidades.
+		* Eliminar productos.
+		* Ver:
+			Cantidad total de productos en el carrito.
+			Precio unitario aplicado.
+			Total final.
+		* Botón: “Confirmar pedido”.
+
+*3) Usuarios*
+	Registro de usuarios.
+	Login.
+	Cada usuario puede:
+	Ver su historial de pedidos.
+	Ver la cantidad de puntos acumulados.
+	Email para recuperar clave.
+
+*4) Pedidos — flujo exacto*
+	4.1 Creación del pedido
+	Cuando el usuario confirma el carrito:
+	Se crea un pedido en estado PENDIENTE.
+	NO se descuenta stock.
+	NO se acreditan puntos.
+
+	4.2 Gestión del pedido (Admin)
+	Desde el panel admin, el pedido puede ser:
+		A) APROBADO
+		Al aprobar un pedido:
+		Se descuenta el stock correspondiente por talle.
+		Se acreditan los puntos al usuario.
+		El pedido pasa a estado APROBADO.
+
+		B) RECHAZADO
+		Al rechazar un pedido:
+		No se descuenta stock.
+		No se acreditan puntos.
+		El pedido queda cerrado como rechazado.
+		No existe aprobación automática.
+		
+*5) Sistema de puntos (MVP)*
+	Cada producto tiene asignada una cantidad de puntos.
+	
+	Los puntos:
+		* Solo se acreditan cuando el pedido es aprobado manualmente.
+	El usuario solo puede:
+		* Ver puntos acumulados.
+		* No hay canje de puntos en el MVP.
+
+*6) Sistema de precios por cantidad (CLARIFICACIÓN CRÍTICA)*
+	6.1 Definición general
+	Cada producto tiene un precio en el Excel, que es el mayorista. Debería poder setearse para que publique:
+		* Precio unitario base(1 a 3 prendas, por ej $10000 de precio de Excel)
+		* Precio unitario medio (3 a 9 prendas, ej. $7000 sobre precio Excel)
+		* Precio unitario grande (10 en adelante, $1000 sobre Excel)
+	
+	6.2 Regla de aplicación (irrefutable)
+	El sistema debe:
+		* Contar la cantidad total de productos en el carrito, sin importar:
+		* Modelo.
+		* Categoría.
+		* Talle.
+
+	Según esa cantidad total:
+		* 1 o 2 productos en el carrito
+			→ se aplica el precio base a todos los productos.
+
+		* Entre 3 y 9 productos en el carrito (inclusive)
+			→ se aplica el precio intermedio a todos los productos.
+
+		* 10 o más productos en el carrito
+			→ se aplica el precio mayorista a todos los productos.
+
+	6.3 Ejemplo explícito
+	Carrito con:
+		2 camisetas distintas → precio base.
+		5 camisetas mezcladas → precio intermedio.
+		12 camisetas → precio mayorista.
+
+	No se calcula por producto individual.
+	No se mezclan precios dentro del mismo carrito.
+
+*7) Excel — actualización masiva (núcleo del sistema)*
+	7.1 Identificación de productos
+	El título del producto es el identificador único.
+	Si el título del Excel coincide exactamente con uno existente:
+		* Se actualiza ese producto.
+	
+	Si no coincide:
+		* Se crea un producto nuevo (sin imágenes).
+
+	7.2 Contenido del Excel
+	El formato será definido y entregado como muestra, y puede incluir, como mínimo:
+		* Categoría.
+		* Título y Talle
+		* Precio mayorista
+		* Cantidad por titulo y talle
+	
+	7.3 Reglas de stock
+	Si un talle no aparece en el Excel → stock = 0.
+	Si aparece → stock = valor indicado.
+	El Excel sobrescribe el estado previo.
+
+*8) Panel Admin (MVP)*
+	Debe permitir:
+		* Login admin.
+		* Crear / editar productos.
+		* Subir / editar imágenes.
+		* Editar títulos, descripciones y categorías.
+		* Subir Excel y ejecutar actualización.
+		* Ver pedidos.
+		* Aprobar / rechazar pedidos.
+
+*9) Tecnología*
+…
+…
+…
+
+*10) Fuera de alcance explícito del MVP*
+	Cupones.
+	Canje de puntos.
+	Vouchers.
+	Emails automáticos.
+	Pagos online.
+	Integración con proveedor.
+	Sincronización automática de stock externo.

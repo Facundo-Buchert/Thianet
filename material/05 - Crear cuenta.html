@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Registro de Usuario - T-Shirt Store</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ec131e",
+                        "primary-hover": "#c91019",
+                        "background-light": "#fcf8f8",
+                        "background-dark": "#221011",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#2d1617",
+                        "border-light": "#f3e7e8",
+                        "border-dark": "#4a2b2d",
+                        "text-main": "#1b0d0e",
+                        "text-muted": "#9a4c50",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex flex-col text-text-main dark:text-white transition-colors duration-200">
+<!-- Navigation -->
+<header class="sticky top-0 z-50 w-full border-b border-border-light dark:border-border-dark bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm">
+<div class="flex items-center justify-between px-6 lg:px-10 py-4 max-w-7xl mx-auto">
+<div class="flex items-center gap-8">
+<!-- Logo -->
+<a class="flex items-center gap-3 group" href="#">
+<div class="size-8 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-3xl">checkroom</span>
+</div>
+<h2 class="text-text-main dark:text-white text-xl font-black tracking-tight group-hover:text-primary transition-colors">T-Shirt Store</h2>
+</a>
+<!-- Desktop Nav -->
+<nav class="hidden md:flex items-center gap-8 ml-4">
+<a class="text-text-main dark:text-gray-300 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors" href="#">Catálogo</a>
+<a class="text-text-main dark:text-gray-300 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors" href="#">Sistema de Puntos</a>
+</nav>
+</div>
+<div class="flex items-center gap-4 md:gap-6">
+<button class="text-text-main dark:text-white hover:text-primary transition-colors relative">
+<span class="material-symbols-outlined">shopping_bag</span>
+<span class="absolute -top-1 -right-1 bg-primary text-white text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center">0</span>
+</button>
+<div class="hidden sm:flex items-center gap-4">
+<a class="text-sm font-medium text-text-muted hover:text-primary transition-colors" href="#">Iniciar Sesión</a>
+<a class="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white text-sm font-bold rounded-lg transition-colors shadow-sm shadow-primary/20" href="#">
+                        Registrarse
+                    </a>
+</div>
+<button class="md:hidden text-text-main dark:text-white">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow flex items-center justify-center p-4 py-10 lg:py-16">
+<div class="w-full max-w-6xl bg-surface-light dark:bg-surface-dark rounded-2xl shadow-xl border border-border-light dark:border-border-dark overflow-hidden flex flex-col lg:flex-row">
+<!-- Left Side: Form -->
+<div class="w-full lg:w-3/5 p-6 md:p-10 lg:p-12 flex flex-col justify-center">
+<div class="max-w-md mx-auto w-full space-y-8">
+<!-- Form Header -->
+<div class="space-y-2">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider mb-2">
+<span class="material-symbols-outlined text-sm">loyalty</span>
+                            Sistema de Puntos
+                        </div>
+<h1 class="text-3xl md:text-4xl font-black tracking-tight text-text-main dark:text-white">
+                            Crear una Cuenta
+                        </h1>
+<p class="text-text-muted dark:text-gray-400 text-base">
+                            Completa tus datos para agilizar tus pedidos y empezar a sumar puntos en cada compra.
+                        </p>
+</div>
+<!-- Registration Form -->
+<form class="space-y-5" onsubmit="event.preventDefault();">
+<!-- Personal Info Group -->
+<div class="space-y-4">
+<p class="text-xs font-bold text-text-muted dark:text-gray-500 uppercase tracking-widest border-b border-border-light dark:border-border-dark pb-2 mb-4">Datos Personales</p>
+<!-- Name -->
+<div class="group">
+<label class="block text-sm font-medium mb-1.5 text-text-main dark:text-gray-200" for="fullname">Nombre Completo <span class="text-primary">*</span></label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-gray-400">person</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-3 rounded-lg border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-text-main dark:text-white shadow-sm focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-all" id="fullname" placeholder="Ej. Juan Pérez" type="text"/>
+</div>
+</div>
+<!-- Email -->
+<div class="group">
+<label class="block text-sm font-medium mb-1.5 text-text-main dark:text-gray-200" for="email">Correo Electrónico <span class="text-primary">*</span></label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-gray-400">mail</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-3 rounded-lg border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-text-main dark:text-white shadow-sm focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-all" id="email" placeholder="juan@ejemplo.com" type="email"/>
+</div>
+</div>
+</div>
+<!-- Contact Info Group -->
+<div class="space-y-4 pt-2">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+<!-- WhatsApp -->
+<div>
+<label class="block text-sm font-medium mb-1.5 text-text-main dark:text-gray-200" for="phone">WhatsApp / Teléfono <span class="text-primary">*</span></label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-gray-400">call</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-3 rounded-lg border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-text-main dark:text-white shadow-sm focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-all" id="phone" placeholder="+54 9 11..." type="tel"/>
+</div>
+<p class="mt-1 text-xs text-text-muted dark:text-gray-500">Para coordinar envíos.</p>
+</div>
+<!-- Instagram -->
+<div>
+<label class="block text-sm font-medium mb-1.5 text-text-main dark:text-gray-200" for="instagram">Instagram</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-gray-400">alternate_email</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-3 rounded-lg border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-text-main dark:text-white shadow-sm focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-all" id="instagram" placeholder="@usuario" type="text"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Shipping Info Group -->
+<div class="space-y-4 pt-2">
+<p class="text-xs font-bold text-text-muted dark:text-gray-500 uppercase tracking-widest border-b border-border-light dark:border-border-dark pb-2 mb-4">Dirección de Envío</p>
+<!-- Address -->
+<div>
+<label class="block text-sm font-medium mb-1.5 text-text-main dark:text-gray-200" for="address">Dirección (Calle y número) <span class="text-primary">*</span></label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-gray-400">home_pin</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-3 rounded-lg border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-text-main dark:text-white shadow-sm focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-all" id="address" placeholder="Av. Siempre Viva 742" type="text"/>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-5">
+<!-- Locality -->
+<div>
+<label class="block text-sm font-medium mb-1.5 text-text-main dark:text-gray-200" for="locality">Localidad <span class="text-primary">*</span></label>
+<input class="block w-full px-3 py-3 rounded-lg border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-text-main dark:text-white shadow-sm focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-all" id="locality" placeholder="Ciudad" type="text"/>
+</div>
+<!-- Zip Code -->
+<div>
+<label class="block text-sm font-medium mb-1.5 text-text-main dark:text-gray-200" for="zip">Código Postal <span class="text-primary">*</span></label>
+<input class="block w-full px-3 py-3 rounded-lg border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark text-text-main dark:text-white shadow-sm focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-all" id="zip" placeholder="CP 1234" type="text"/>
+</div>
+</div>
+</div>
+<!-- Submit Button -->
+<div class="pt-4">
+<button class="w-full flex justify-center py-4 px-4 border border-transparent rounded-lg shadow-lg shadow-primary/30 text-base font-bold text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all transform active:scale-[0.98]" type="submit">
+                                Registrarse Ahora
+                            </button>
+</div>
+<!-- Terms Footer -->
+<p class="text-center text-xs text-text-muted dark:text-gray-500 mt-4">
+                            Al hacer clic en "Registrarse Ahora", aceptas nuestros <a class="underline hover:text-primary" href="#">Términos y Condiciones</a> y <a class="underline hover:text-primary" href="#">Política de Privacidad</a>.
+                        </p>
+<div class="relative my-6">
+<div class="absolute inset-0 flex items-center">
+<div class="w-full border-t border-border-light dark:border-border-dark"></div>
+</div>
+<div class="relative flex justify-center text-sm">
+<span class="px-2 bg-surface-light dark:bg-surface-dark text-text-muted dark:text-gray-500">¿Ya tienes cuenta?</span>
+</div>
+</div>
+<div class="flex justify-center">
+<a class="text-sm font-bold text-primary hover:text-primary-hover flex items-center gap-1 group" href="#">
+                                Iniciar Sesión 
+                                <span class="material-symbols-outlined text-lg transition-transform group-hover:translate-x-1">arrow_forward</span>
+</a>
+</div>
+</form>
+</div>
+</div>
+<!-- Right Side: Visual -->
+<div class="hidden lg:block lg:w-2/5 relative bg-background-dark overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-t from-background-dark/80 via-transparent to-transparent z-10"></div>
+<img alt="Colección de Camisetas" class="h-full w-full object-cover object-center opacity-90" data-alt="Modern minimalist lifestyle photo of a person wearing a stylish plain t-shirt in an urban setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAs0QLxavGZsU2A5koODaXxiNF3Aeqy_gMzZ8z-KbV28qcwbELsotiTS0dFNtgJFFc-H1z9DpXkLDsbNQKj0o_oRHTVOg2Iz3HmGmx5a-IH38_sWf2DG87KkC18-z6tLlHCPAH4UOGuCmH78HGPQ08cJ-lS4P5FHAA8Axwc4lwGNNbDaYc_MuEfhS8CvmeQ7jtZYD9dFsrkwsdJCSj3TB_jqh0wVaaF2rRUF5mwq8a-LrxXQdVcd1z9y-Nl9ywiSxoDYeKG24zvrTiC"/>
+<div class="absolute bottom-0 left-0 right-0 p-12 z-20 text-white">
+<div class="bg-primary/90 backdrop-blur-md rounded-2xl p-6 shadow-2xl border border-white/10">
+<span class="material-symbols-outlined text-4xl mb-3 text-white">loyalty</span>
+<h3 class="text-xl font-bold mb-2">Suma Puntos</h3>
+<p class="text-white/90 text-sm leading-relaxed">
+                            Con cada camiseta que compres, acumulas puntos que puedes canjear por descuentos exclusivos en tu próxima compra. ¡Únete a la comunidad!
+                        </p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<footer class="py-8 text-center text-sm text-text-muted dark:text-gray-600">
+<p>© 2024 T-Shirt Store. Todos los derechos reservados.</p>
+</footer>
+</body></html>

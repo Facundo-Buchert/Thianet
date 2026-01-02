@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Carrito de Compras - CamisetasStore</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Config -->
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ec131e",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#221011",
+                        "text-main": "#1b0d0e",
+                        "text-muted": "#6b7280",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "sans": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-text-main dark:text-white flex flex-col min-h-screen font-display">
+<!-- Top Navigation -->
+<header class="sticky top-0 z-50 bg-white/80 dark:bg-[#1a0f0f]/80 backdrop-blur-md border-b border-[#f3e7e8] dark:border-gray-800 px-4 md:px-10 py-3">
+<div class="max-w-[1280px] mx-auto flex items-center justify-between">
+<div class="flex items-center gap-4 md:gap-8">
+<!-- Logo -->
+<a class="flex items-center gap-3 text-text-main dark:text-white group" href="#">
+<div class="size-8 text-primary transition-transform group-hover:scale-110">
+<svg class="w-full h-full" fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M14 12V36C14 39.3137 16.6863 42 20 42H28C31.3137 42 34 39.3137 34 36V12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path>
+<path d="M24 12V6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path>
+<path d="M6 12H42" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path>
+</svg>
+</div>
+<h2 class="text-lg md:text-xl font-bold tracking-tight hidden sm:block">CamisetasStore</h2>
+</a>
+<!-- Desktop Nav -->
+<nav class="hidden lg:flex items-center gap-6">
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Catálogo</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Hombres</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Mujeres</a>
+<a class="text-sm font-medium hover:text-primary transition-colors" href="#">Puntos</a>
+</nav>
+</div>
+<div class="flex items-center gap-3 md:gap-6">
+<!-- Search Bar (Desktop) -->
+<div class="hidden md:flex items-center bg-[#f3e7e8] dark:bg-gray-800 rounded-lg px-3 py-2 w-64 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+<span class="material-symbols-outlined text-gray-500 dark:text-gray-400 text-[20px]">search</span>
+<input class="bg-transparent border-none text-sm w-full focus:ring-0 text-text-main dark:text-white placeholder-gray-500 dark:placeholder-gray-400" placeholder="Buscar productos..." type="text"/>
+</div>
+<!-- Actions -->
+<div class="flex items-center gap-2">
+<button class="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-text-main dark:text-white">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="absolute top-1 right-1 flex h-2.5 w-2.5">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
+</span>
+</button>
+<button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-text-main dark:text-white">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow px-4 md:px-10 py-8">
+<div class="max-w-[1100px] mx-auto">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+<div>
+<h1 class="text-3xl md:text-4xl font-bold tracking-tight text-text-main dark:text-white">Tu Carrito</h1>
+<p class="text-text-muted dark:text-gray-400 mt-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+                        Tienes 3 productos listos para reservar
+                    </p>
+</div>
+<a class="text-primary hover:text-red-700 font-medium text-sm flex items-center gap-1 transition-colors" href="#">
+<span class="material-symbols-outlined text-lg">arrow_back</span>
+                    Seguir comprando
+                </a>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+<!-- Left Column: Cart Items -->
+<div class="lg:col-span-8 flex flex-col gap-6">
+<!-- Item 1 -->
+<div class="bg-white dark:bg-[#1a0f0f] p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row gap-6 group">
+<!-- Image -->
+<div class="relative shrink-0 w-full sm:w-32 aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="black basic t-shirt on a hanger" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDm4ua4DJgMiTJUAL25lSdRdq9RTUNicm7t6JriKBVAmbmlsw0RcHT9ADMH6oNBU-ggxjbBtmsIcmFIG_8YsoDapiIpvNEmzTFN7p0an72JgH6v4FuRJbmrrm-Y0I9EqxFrzb0VlAtBtn1a-W6QAfba9uQYmHgUCP4j-bZzxX2FO-oXZ2gGjACahy9dVZMXvYWCpzQ7rWpBjbuytmegMFjSBsMx20YD9P4DtwnumBFqNQ0qtReiPAWbR3E4HJxM95-GV4YfORoNs7Fv");'></div>
+</div>
+<!-- Content -->
+<div class="flex flex-col flex-1 justify-between">
+<div class="flex justify-between items-start gap-4">
+<div>
+<h3 class="font-bold text-lg text-text-main dark:text-white leading-tight">Camiseta Básica Premium</h3>
+<p class="text-sm text-text-muted dark:text-gray-400 mt-1">Color: Negro Profundo | Talla: M</p>
+<div class="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+<span class="material-symbols-outlined text-[14px]">inventory_2</span> En stock
+                                    </div>
+</div>
+<button class="text-gray-400 hover:text-primary transition-colors p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20" title="Eliminar producto">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+<div class="flex flex-wrap items-end justify-between gap-4 mt-4 sm:mt-0">
+<!-- Quantity -->
+<div class="flex items-center border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/50">
+<button class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-text-main dark:hover:text-white transition-colors">
+<span class="material-symbols-outlined text-sm">remove</span>
+</button>
+<input class="w-10 bg-transparent border-none p-0 text-center text-sm font-medium focus:ring-0" readonly="" type="number" value="2"/>
+<button class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-text-main dark:hover:text-white transition-colors">
+<span class="material-symbols-outlined text-sm">add</span>
+</button>
+</div>
+<!-- Price -->
+<div class="text-right">
+<div class="text-xs text-text-muted dark:text-gray-500 line-through">$45.00 unitario</div>
+<div class="font-bold text-xl text-text-main dark:text-white">$90.00</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="bg-white dark:bg-[#1a0f0f] p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row gap-6 group">
+<div class="relative shrink-0 w-full sm:w-32 aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="retro graphic t-shirt colorful" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAIZbe08DzLVvBH3w5XpLs99n-BXrHOB9l5UZp9qzLXMn-_qCEC-ae3CvQ14NFG462b4eB1tofoSK_KbKthsd5oVs0pNiz9F3Hs4O2CYdbXKg55lHKYwEweAKkBvqsLAn7Mo3t0f_s02i7l29-MoM6PobbayRdEnZTEyAln_eyI1_j1uVU3dipZfHfMyYBH3-MOj0fkSafg-tCmQSZSXJOF3qRSeBb6I4V8xn2JnrwwHfudg72Ry7V6lSLjPBeuC5VT99lQJYrLpJAt");'></div>
+</div>
+<div class="flex flex-col flex-1 justify-between">
+<div class="flex justify-between items-start gap-4">
+<div>
+<h3 class="font-bold text-lg text-text-main dark:text-white leading-tight">Colección Retro '90s</h3>
+<p class="text-sm text-text-muted dark:text-gray-400 mt-1">Color: Blanco Hueso | Talla: L</p>
+</div>
+<button class="text-gray-400 hover:text-primary transition-colors p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20" title="Eliminar producto">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+<div class="flex flex-wrap items-end justify-between gap-4 mt-4 sm:mt-0">
+<div class="flex items-center border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/50">
+<button class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-text-main dark:hover:text-white transition-colors">
+<span class="material-symbols-outlined text-sm">remove</span>
+</button>
+<input class="w-10 bg-transparent border-none p-0 text-center text-sm font-medium focus:ring-0" readonly="" type="number" value="1"/>
+<button class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-text-main dark:hover:text-white transition-colors">
+<span class="material-symbols-outlined text-sm">add</span>
+</button>
+</div>
+<div class="text-right">
+<div class="font-bold text-xl text-text-main dark:text-white">$35.00</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="bg-white dark:bg-[#1a0f0f] p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row gap-6 group">
+<div class="relative shrink-0 w-full sm:w-32 aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="blue sports t-shirt folded" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAVLulUoMc4nb8ZIYgAePHev5CDfpBAk5sfIUmvkMa8kMBllQzlIKjZVQJE1YsewIPlhEfnvO3xwqViayEGL1jrkhaxS3EvtEHkeJoMfTxhj_VWPRS2LKpzuKd9QLh9aN22kB1WQMUwpKNfM9qY9OR8iJuGsvNu_BySpJ3ma5N-ygGORDGUfK4SVSz6Vo2AKRFZiKsyieso6q1r1lc55LOWE8SicArpX_1DLHRtoR8OHI2xy6gJUGeZjYxk3-4VTftOYikeLaGoYzuZ");'></div>
+</div>
+<div class="flex flex-col flex-1 justify-between">
+<div class="flex justify-between items-start gap-4">
+<div>
+<h3 class="font-bold text-lg text-text-main dark:text-white leading-tight">Camiseta Deportiva Pro</h3>
+<p class="text-sm text-text-muted dark:text-gray-400 mt-1">Color: Azul Marino | Talla: S</p>
+<div class="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+<span class="material-symbols-outlined text-[14px]">warning</span> Últimas unidades
+                                    </div>
+</div>
+<button class="text-gray-400 hover:text-primary transition-colors p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20" title="Eliminar producto">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+<div class="flex flex-wrap items-end justify-between gap-4 mt-4 sm:mt-0">
+<div class="flex items-center border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/50">
+<button class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-text-main dark:hover:text-white transition-colors">
+<span class="material-symbols-outlined text-sm">remove</span>
+</button>
+<input class="w-10 bg-transparent border-none p-0 text-center text-sm font-medium focus:ring-0" readonly="" type="number" value="1"/>
+<button class="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-text-main dark:hover:text-white transition-colors">
+<span class="material-symbols-outlined text-sm">add</span>
+</button>
+</div>
+<div class="text-right">
+<div class="font-bold text-xl text-text-main dark:text-white">$28.00</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Summary Sticky -->
+<div class="lg:col-span-4 lg:sticky lg:top-24">
+<div class="bg-white dark:bg-[#1a0f0f] rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 flex flex-col gap-6">
+<h2 class="text-xl font-bold text-text-main dark:text-white">Resumen del Pedido</h2>
+<!-- Coupon Code -->
+<div>
+<label class="text-xs font-semibold text-text-muted dark:text-gray-400 uppercase tracking-wide mb-2 block">Código de descuento</label>
+<div class="flex gap-2">
+<input class="flex-1 rounded-lg border-gray-200 dark:border-gray-700 bg-background-light dark:bg-gray-900 text-sm focus:border-primary focus:ring-primary dark:text-white placeholder-gray-400" placeholder="EJ: VERANO2024" type="text"/>
+<button class="px-4 py-2 bg-gray-900 dark:bg-gray-700 text-white text-sm font-medium rounded-lg hover:bg-black dark:hover:bg-gray-600 transition-colors">Aplicar</button>
+</div>
+</div>
+<!-- Calculations -->
+<div class="flex flex-col gap-3 py-4 border-t border-b border-gray-100 dark:border-gray-800">
+<div class="flex justify-between text-sm">
+<span class="text-text-muted dark:text-gray-400">Subtotal (4 productos)</span>
+<span class="font-medium text-text-main dark:text-white">$153.00</span>
+</div>
+<div class="flex justify-between text-sm">
+<span class="text-text-muted dark:text-gray-400">Descuento</span>
+<span class="font-medium text-green-600 dark:text-green-400">-$0.00</span>
+</div>
+<div class="flex justify-between text-sm">
+<span class="text-text-muted dark:text-gray-400">Envío (Calculado al confirmar)</span>
+<span class="font-medium text-text-muted dark:text-gray-500">--</span>
+</div>
+</div>
+<!-- Points Banner -->
+<div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/50 rounded-lg p-3 flex items-start gap-3">
+<span class="material-symbols-outlined text-blue-600 dark:text-blue-400">loyalty</span>
+<div>
+<p class="text-sm font-bold text-blue-800 dark:text-blue-300">¡Ganas 153 Puntos!</p>
+<p class="text-xs text-blue-600 dark:text-blue-400 mt-0.5">Acumula puntos para canjear por premios exclusivos.</p>
+</div>
+</div>
+<!-- Total -->
+<div class="flex justify-between items-end mt-2">
+<span class="text-base font-semibold text-text-main dark:text-white">Total Estimado</span>
+<span class="text-3xl font-bold text-text-main dark:text-white tracking-tight">$153.00</span>
+</div>
+<!-- Action Button -->
+<button class="w-full bg-primary hover:bg-red-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-red-500/30 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 group">
+                            Confirmar Pedido
+                            <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+<p class="text-xs text-center text-text-muted dark:text-gray-500 px-4">
+                            Al confirmar, reservarás tus productos. El pago se coordinará posteriormente.
+                        </p>
+</div>
+</div>
+</div>
+<!-- Recommendations Section -->
+<div class="mt-20 border-t border-gray-200 dark:border-gray-800 pt-10">
+<h3 class="text-2xl font-bold mb-6 text-text-main dark:text-white">Te podría interesar</h3>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+<!-- Rec 1 -->
+<div class="group cursor-pointer">
+<div class="aspect-[3/4] rounded-lg bg-gray-100 dark:bg-gray-800 overflow-hidden mb-3 relative">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="white graphic tee close up" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDGJe324vnnQbZYawaLGpSUSADvkJVUHQGNc-S0sHXRB__2_2rm9_4e_ICy8wnZ6OzmrAqSuo0mo-m0OxkLf2c-SSbyX6kSYWNuMwtVR98_gmvxqgKtdUQPQVqMXm5WJEUHjXSvQ9iM3RsvIuoq09HfuG9ABbXAMrj0rl3_WSDglfAhBQBHtDnkZho4OAbTp50Hy-cZXvlsajlR3YJAmXf6VFepCH3lI81-vqqSpmJ371QR9lm3Tg6Q6B9eFtLjrtjbPSb4KEDtvcfT");'></div>
+</div>
+<h4 class="font-medium text-text-main dark:text-white text-sm">Edición Limitada Verano</h4>
+<p class="text-sm font-bold text-primary mt-1">$32.00</p>
+</div>
+<!-- Rec 2 -->
+<div class="group cursor-pointer">
+<div class="aspect-[3/4] rounded-lg bg-gray-100 dark:bg-gray-800 overflow-hidden mb-3 relative">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="red plain t-shirt mockup" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBfu-5iU0SotUiCaemQND9KCkPLTOXeukaXA17t7PIy5yJIdVhrWYugbuwYZfWFii6fmW4mnysn_DhiMLfsnqNiGQFPeuG9W2f3TPG2p-40lbo_7JCc2G8po3mC86BLlxUzN7_ns_1sKKfPlCScG7ffWga1X4Ab6N7ux46-tzdtOOL6PRkY_wRO7Kf02W-T-NryUtD9cE83jX6owGgku8vM2tvveAbpBu6nMhmTm6-tIuvutXlc-ZlUvN7wOJsEEzPtDPU_df36FcH5");'></div>
+</div>
+<h4 class="font-medium text-text-main dark:text-white text-sm">Básica Roja</h4>
+<p class="text-sm font-bold text-primary mt-1">$25.00</p>
+</div>
+<!-- Rec 3 -->
+<div class="group cursor-pointer">
+<div class="aspect-[3/4] rounded-lg bg-gray-100 dark:bg-gray-800 overflow-hidden mb-3 relative">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="grey hoodie street style" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCTFpFfBs2F2EfV0DCzYcsQT-KK8ha2xRuy09GcUedDAIgRT_hQjCvsx1YaF-d6PPl05LMOlnxTRxvP0-h4X6GPaMO4LmrVZxHzARp_Hg9I2FzXbNOOZwR3tvwteBQzzPVDYLK5qyHq2V4fPLW8RaNUPMRjtm6-HENQVU1tdAPxEHRTbCav4zwuNHOHcfxFZdUsFBVsCjVOiowMqtRcnqgMJf7VyIuEgSPFvMOLAXUm6zSmBuXNNELG78-sta8rEp7XjZbgX972Vuar");'></div>
+</div>
+<h4 class="font-medium text-text-main dark:text-white text-sm">Hoodie Gris Urbano</h4>
+<p class="text-sm font-bold text-primary mt-1">$55.00</p>
+</div>
+<!-- Rec 4 -->
+<div class="group cursor-pointer">
+<div class="aspect-[3/4] rounded-lg bg-gray-100 dark:bg-gray-800 overflow-hidden mb-3 relative">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="yellow bright t-shirt folded" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDuCJKP199lc7UBtwBx0TlRIpVs9uHiX8ldJBpwzwyr6MMdJBynNL7lUBHM1JNB2NKc-H6Tj2aEhX634jSYijL0OYwV_WpUqJvYQaKqB3sVnR6cqZqvmsv8slBQkdyrSMpbNci5Ve9zHURS08D1RyBt7bmr-le4mTG_FBd0DdkpTYwKBR6RV6qnEIKE65ERlt_-HhjLhvMcMPMbelPZ6IOKFmNTzUB-FOL6My4X-IKZYLNTBwJSg49f-FQ5H3RgtnMg2FbxP6U2cPWY");'></div>
+</div>
+<h4 class="font-medium text-text-main dark:text-white text-sm">Amarillo Solar</h4>
+<p class="text-sm font-bold text-primary mt-1">$28.00</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Simple Footer -->
+<footer class="bg-white dark:bg-[#1a0f0f] border-t border-gray-200 dark:border-gray-800 py-10 px-4 mt-auto">
+<div class="max-w-[1280px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="flex items-center gap-2 text-text-main dark:text-white opacity-80">
+<div class="size-6">
+<svg class="w-full h-full" fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M14 12V36C14 39.3137 16.6863 42 20 42H28C31.3137 42 34 39.3137 34 36V12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path>
+<path d="M24 12V6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path>
+<path d="M6 12H42" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path>
+</svg>
+</div>
+<span class="font-bold">CamisetasStore</span>
+</div>
+<div class="text-sm text-text-muted dark:text-gray-500 text-center md:text-right">
+<p>© 2024 CamisetasStore. Todos los derechos reservados.</p>
+<div class="flex gap-4 justify-center md:justify-end mt-2">
+<a class="hover:text-primary transition-colors" href="#">Política de Privacidad</a>
+<a class="hover:text-primary transition-colors" href="#">Términos de Servicio</a>
+</div>
+</div>
+</div>
+</footer>
+</body></html>
