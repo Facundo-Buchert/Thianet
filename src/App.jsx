@@ -3,7 +3,7 @@ import { Header } from './UserPanel/components/Header'
 import { Footer } from './UserPanel/components/Footer'
 import { Home } from './UserPanel/pages/Home'
 import { Inventory } from './UserPanel/pages/Inventory'
-import { MerchDetail } from './UserPanel/components/MerchDetail'
+import { MerchDetail } from './UserPanel/pages/MerchDetail'
 
 const router = createBrowserRouter([
   //USER PANEL ROUTES
