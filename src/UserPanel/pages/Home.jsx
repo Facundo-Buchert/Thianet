@@ -1,7 +1,12 @@
-import React from 'react';
+// src/UserPanel/pages/Home.jsx
+
+import { useProducts } from '../../context/ProductsContext';
+import { MerchCard } from '../components/MerchCard';
 import './Home.css';
 
 export const Home = () => {
+  const { trending } = useProducts();
+
   return (
     <main className="home">
       <section className="hero">
@@ -24,21 +29,16 @@ export const Home = () => {
         <h3>Tendencias</h3>
 
         <div className="products">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="card">
-              <div className="card-img" />
-              <div className="card-body">
-                <h4>Producto de prueba</h4>
-                <p>Unisex</p>
-                <div className="card-footer">
-                  <span className="price">$25.00</span>
-                  <button className="btn-small">Agregar</button>
-                </div>
-              </div>
-            </div>
-          ))}
+          {trending.length === 0 ? (
+            <p>No hay productos destacados aún.</p>
+          ) : (
+            trending.map(product => (
+              <MerchCard key={product.id} product={product} />
+            ))
+          )}
         </div>
       </section>
     </main>
   );
-}
+};
+
