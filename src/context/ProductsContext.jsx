@@ -50,8 +50,6 @@ export const ProductsProvider = ({ children }) => {
     fetchTrending();
   }, [page]);
 
-  console.log('ProductsContext products:', products, 'trending:', trending);
-
   return (
     <ProductsContext.Provider
       value={{
