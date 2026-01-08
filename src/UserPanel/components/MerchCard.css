@@ -7,14 +7,21 @@
 }
 
 .card {
-  border: 1px solid #eee;
+  border: 1px solid #d1d1d1;
   border-radius: 12px;
   overflow: hidden;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  transition: box-shadow 0.3s ease;
 }
 
 .card-img {
   height: 260px;
   background: #ddd;
+  background-size: cover;
+  background-position: center;
 }
 
 .card-body {
@@ -50,3 +57,8 @@
   cursor: pointer;
   border-radius: 5px;
 }
+
+.btn-small:hover {
+  background: #c81b20;
+}
+

@@ -4,6 +4,7 @@ import { Footer } from './UserPanel/components/Footer'
 import { Home } from './UserPanel/pages/Home'
 import { Inventory } from './UserPanel/pages/Inventory'
 import { MerchDetail } from './UserPanel/pages/MerchDetail'
+import './index.css'
 
 const router = createBrowserRouter([
   //USER PANEL ROUTES

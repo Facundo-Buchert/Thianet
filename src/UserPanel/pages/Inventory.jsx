@@ -10,6 +10,7 @@ export const Inventory = () => {
 
   const prev = () => setPage(Math.max(1, page - 1));
   const next = () => setPage(page + 1);
+  const maxPages = Math.ceil(products.length / 20);
 
   return (
     <div className="inventory-page">
@@ -35,7 +36,7 @@ export const Inventory = () => {
       <footer className="pagination">
         <button onClick={prev} disabled={page === 1}>Anterior</button>
         <span>Página {page}</span>
-        <button onClick={next}>Siguiente</button>
+        <button onClick={next} disabled={page === maxPages + 1}>Siguiente</button>
       </footer>
     </div>
   );

@@ -14,37 +14,36 @@ export const ProductsProvider = ({ children }) => {
 
   const fetchProducts = async (page = 1) => {
     setLoading(true);
+
     const from = (page - 1) * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
 
     const { data, error } = await supabase
       .from('products')
       .select('*')
+      .eq('hasstock', true)
       .range(from, to);
 
-    if (error) {
-      console.error('fetchProducts error:', error);
-      setProducts([]);
-    } else {
-      setProducts(data || []);
+    if (!error) {
+      setProducts(data);
     }
+
     setLoading(false);
   };
 
+
   const fetchTrending = async () => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('products')
       .select('*')
+      .eq('hasstock', true)
       .eq('isTrending', true)
       .limit(10);
 
-    if (error) {
-      console.error('fetchTrending error:', error);
-      setTrending([]);
-    } else {
-      setTrending(data || []);
-    }
+    setTrending(data || []);
   };
+
+
 
   useEffect(() => {
     fetchProducts(page);

@@ -45,11 +45,13 @@
   font-weight: 700;
   text-transform: uppercase;
   color: #000;
+  transition: 0.3s;
 }
 
 .nav a:hover {
   cursor: pointer;
   color: #e31e24;
+
 }
 
 .active-nav-link {
