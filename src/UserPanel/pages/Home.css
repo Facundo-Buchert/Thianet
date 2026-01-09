@@ -36,6 +36,12 @@
   cursor: pointer;
 }
 
+.btn-primary:hover {
+  background: #c50b11;
+  opacity: 0.9;
+}
+
+
 /* SECTION */
 .section {
   max-width: 1280px;

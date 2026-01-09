@@ -25,6 +25,12 @@
   color: #e31e24;
 }
 
+.tc-section {
+  scroll-margin-top: 90px;
+}
+
+
+
 .footer-title {
   font-size: 28px;
   font-weight: 900;

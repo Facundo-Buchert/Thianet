@@ -17,8 +17,8 @@ export const Header = () => {
         <nav className="nav">
           <li><Link to="/">Home</Link></li>
           <li><Link to="/catalogo">Catálogo</Link></li>
-          <li><Link to="/">Preguntas Frecuentes</Link></li>
-          <li><Link to="/">Terminos y Condiciones</Link></li>
+          <li><Link to="/preguntas-frecuentes">Preguntas Frecuentes</Link></li>
+          <li><Link to="/terminos-y-condiciones">Terminos y Condiciones</Link></li>
         </nav>
 
         <div className="header-actions">

@@ -2,6 +2,7 @@
 
 import { useProducts } from '../../context/ProductsContext';
 import { MerchCard } from '../components/MerchCard';
+import { Link } from 'react-router-dom';
 import './Home.css';
 
 export const Home = () => {
@@ -19,8 +20,8 @@ export const Home = () => {
             tus compras.
           </p>
           <button className="btn-primary">
-            Comprar
-            <span className="material-symbols-outlined">arrow_forward</span>
+              Comprar
+              <span className="material-symbols-outlined">arrow_forward</span>
           </button>
         </div>
       </section>

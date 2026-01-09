@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import supabase from '../../../utils/supabase';
 import { useCart } from '../../context/CartContext';
 import SizeSelector from '../components/SizeSelector';
+import SizeGuideModal from '../components/SizeGuideModal';
 import './MerchDetail.css';
 
 const placeholder =
@@ -16,6 +17,17 @@ const MerchDetail = () => {
   const [qty, setQty] = useState(1);
   const [loading, setLoading] = useState(false);
   const { addItem } = useCart();
+
+  const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+
+  const openModal = (e) => {
+    e.preventDefault();
+    setIsSizeGuideOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsSizeGuideOpen(false);
+  };
 
 
   useEffect(() => {
@@ -152,7 +164,8 @@ const MerchDetail = () => {
           <div className="sizes-block">
             <div className="sizes-header">
               <h4>Selecciona tu talla</h4>
-              <button className="size-guide" type="button">Guía de talles</button>
+              <button onClick={openModal} className="size-guide" type="button">Guía de talles</button>
+              <SizeGuideModal isOpen={isSizeGuideOpen} onClose={closeModal} />
             </div>
 
             <div className="size-grid">

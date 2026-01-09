@@ -1,5 +1,7 @@
 import "./Footer.css";
 import "./SizeGuideModal.jsx"
+import { HashLink } from 'react-router-hash-link';
+import { Link } from 'react-router-dom';
 import SizeGuideModal from "./SizeGuideModal.jsx";
 
 import { useState } from "react";
@@ -31,10 +33,10 @@ export const Footer = () => {
         <div className="footer-column">
           <h4>Shop</h4>
           <ul>
-            <li><a href="#">Catálogo</a></li>
-            <li><a href="#">Preguntas Frecuentes</a></li>
-            <li><a href="#">Términos y condiciones</a></li>
-            <li><a href="#">Instagram</a></li>
+            <li><Link to="/catalogo">Catálogo</Link></li>
+            <li><Link to="/preguntas-frecuentes">Preguntas Frecuentes</Link></li>
+            <li><Link to="/terminos-y-condiciones">Terminos y Condiciones</Link></li>
+            <li><a href="https://www.instagram.com/thianet.ar/" target="blank">Instagram</a></li>
           </ul>
         </div>
 
@@ -43,8 +45,8 @@ export const Footer = () => {
           <ul>
             <li><a onClick={openModal}>Guía de talles</a></li>
             <SizeGuideModal isOpen={isSizeGuideOpen} onClose={closeModal} />
-            <li><a href="#">Política de cambios</a></li>
-            <li><a href="#">Contactanos</a></li>
+            <li><HashLink smooth to="/terminos-y-condiciones#policy-of-changes">Política de cambios</HashLink></li>
+            <li><a href="https://api.whatsapp.com/send?phone=5491124712342" target="blank">Contactanos</a></li>
           </ul>
         </div>
 
