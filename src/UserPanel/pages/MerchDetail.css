@@ -19,7 +19,7 @@
 }
 
 .main-image {
-  width: 90%;
+  width: 85%;
   aspect-ratio: 5 / 5;
   border-radius: 14px;
   background-size: cover;
@@ -70,14 +70,27 @@
 }
 
 .price {
-  font-size: 26px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #000000;
+  text-decoration: line-through;
+}
+
+.price0 {
+  font-size: 30px;
   font-weight: 800;
-  color: #e31e24;
+  color: #c50b11;
 }
 
 .points {
   color: #7b6b6b;
   font-size: 13px;
+}
+
+.points-amount {
+  font-weight: 600;
+  color: #524c4c;
+  text-decoration: underline;
 }
 
 .rating {
@@ -180,6 +193,16 @@
   align-items:center;
   gap:10px;
   box-shadow: 0 8px 20px rgba(227,30,36,0.12);
+  transition: 0,1s;
+}
+
+.add-btn:hover {
+  background:#c81b20;
+  padding:14px 22px;
+}
+
+.add-btn:active {
+  background: #f33f45;
 }
 
 .add-btn[disabled],

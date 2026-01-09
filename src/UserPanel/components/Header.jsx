@@ -1,8 +1,12 @@
 import React from 'react'
 import { Link } from 'react-router-dom';
+import { useCart } from '../../context/CartContext';
 import './Header.css';
 
 export const Header = () => {
+
+  const { totalQty } = useCart();
+
   return (
     <header className="header">
       <div className="header-inner">
@@ -11,18 +15,20 @@ export const Header = () => {
         </h1>
 
         <nav className="nav">
-            <li><Link to="/inventory">Inventory</Link></li>
-            <li><Link to="/women">Women</Link></li>
-            <li><Link to="/accessories">Accessories</Link></li>
-            <li><Link to="/sale">Sale</Link></li>
+          <li><Link to="/">Home</Link></li>
+          <li><Link to="/catalogo">Catálogo</Link></li>
+          <li><Link to="/">Preguntas Frecuentes</Link></li>
+          <li><Link to="/">Terminos y Condiciones</Link></li>
         </nav>
 
         <div className="header-actions">
           <input className="search" placeholder="Search" />
           <span className="material-symbols-outlined">person</span>
           <div className="cart">
-            <span className="material-symbols-outlined">shopping_bag</span>
-            <span className="badge">2</span>
+            <Link to="/carrito">
+              <span className="material-symbols-outlined">shopping_bag</span>
+              <span className="badge">{totalQty}</span>
+            </Link>
           </div>
         </div>
       </div>

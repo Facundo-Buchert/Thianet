@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import supabase from '../../../utils/supabase';
+import { useCart } from '../../context/CartContext';
 import SizeSelector from '../components/SizeSelector';
 import './MerchDetail.css';
 
@@ -14,6 +15,8 @@ const MerchDetail = () => {
   const [selectedSize, setSelectedSize] = useState(null);
   const [qty, setQty] = useState(1);
   const [loading, setLoading] = useState(false);
+  const { addItem } = useCart();
+
 
   useEffect(() => {
     setProduct(null);
@@ -63,16 +66,18 @@ const MerchDetail = () => {
 
   const addToCart = () => {
     if (!selectedSize) return;
-    // placeholder: reemplazar por CartContext o llamada real
-    console.log('ADD TO CART', {
+    const available = Number(product.stockPerSize?.[selectedSize] ?? 0);
+    addItem({
       productId: product.id,
       title: product.title,
+      img: product.img?.[0],
       size: selectedSize,
       qty,
-      price: product.price,
+      price: Number(product.price ?? 0),
+      price1: product.price1 !== undefined ? Number(product.price1) : undefined,
+      price2: product.price2 !== undefined ? Number(product.price2) : undefined,
+      maxStock: available,
     });
-    // feedback simple
-    alert(`Añadido ${qty} × ${product.title} (Talle ${selectedSize})`);
   };
 
   return (
@@ -125,7 +130,11 @@ const MerchDetail = () => {
                 <span className="currency">$</span>
                 <span className="amount">{product.price}</span>
               </div>
-              {/*<div className="points">{product.points ? `o ${product.points} Puntos` : ''}</div>*/}
+              <div className="price0">
+                <span className="currency">$</span>
+                <span className="amount">{product.price0}</span>
+              </div>
+              <div className="points">¡Podes ganar hasta <span className="points-amount">{Math.round(product.price0 / 100)}</span> puntos!</div>
             </div>
 
             {/* optional rating placeholder */}

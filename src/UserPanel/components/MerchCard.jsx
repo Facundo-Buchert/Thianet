@@ -21,7 +21,8 @@ export const MerchCard = ({ product }) => {
         <h4>{product.title}</h4>
         <p>{product.isTrending ? "Trending" : "Producto"}</p>
         <div className="card-footer">
-          <span className="price">${product.price}</span>
+          <span className="Price">${product.price}</span>
+          <span className="Price0">${product.price0}</span>
           <button className="btn-small">Agregar</button>
         </div>
       </div>

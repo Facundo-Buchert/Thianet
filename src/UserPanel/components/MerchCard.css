@@ -39,13 +39,21 @@
 
 .card-footer {
   margin-top: 16px;
-  display: flex;
+  display: flex;  
   justify-content: space-between;
   align-items: center;
 }
 
-.price {
-  font-weight: 700;
+.Price {
+  font-weight: 200;
+  font-style: italic;
+  text-decoration: line-through;
+}
+
+.Price0 {
+  font-weight: 600;
+  color: #c50b11;
+
 }
 
 .btn-small {
