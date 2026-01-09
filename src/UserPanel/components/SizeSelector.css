@@ -1,0 +1,25 @@
+.size-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.size-btn {
+  min-width: 42px;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.size-btn.active {
+  border-color: black;
+  font-weight: 600;
+}
+
+.size-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}

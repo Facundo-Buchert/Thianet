@@ -1,0 +1,72 @@
+/* src/UserPanel/components/MerchCard.css */
+
+.products {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 24px;
+}
+
+.card {
+  border: 1px solid #d1d1d1;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  transition: box-shadow 0.3s ease;
+}
+
+.card-img {
+  height: 260px;
+  background: #ddd;
+  background-size: cover;
+  background-position: center;
+}
+
+.card-body {
+  padding: 16px;
+}
+
+.card-body h4 {
+  margin-bottom: 4px;
+}
+
+.card-body p {
+  font-size: 14px;
+  color: #666;
+}
+
+.card-footer {
+  margin-top: 16px;
+  display: flex;  
+  justify-content: space-between;
+  align-items: center;
+}
+
+.Price {
+  font-weight: 200;
+  font-style: italic;
+  text-decoration: line-through;
+}
+
+.Price0 {
+  font-weight: 600;
+  color: #c50b11;
+
+}
+
+.btn-small {
+  background: #e31e24;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.btn-small:hover {
+  background: #c81b20;
+}
+

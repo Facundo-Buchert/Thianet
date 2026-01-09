@@ -2,14 +2,17 @@ import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 import { Header } from './UserPanel/components/Header'
 import { Footer } from './UserPanel/components/Footer'
 import { Home } from './UserPanel/pages/Home'
-import { Inventory } from './UserPanel/pages/Inventory'
-import { MerchDetail } from './UserPanel/pages/MerchDetail'
+import { Cart } from './UserPanel/pages/Cart'
+import { Catalogo } from './UserPanel/pages/Catalogo'
+import MerchDetail  from './UserPanel/pages/MerchDetail'
+import './index.css'
 
 const router = createBrowserRouter([
   //USER PANEL ROUTES
   { path: "/", element: <><Header /><Home /><Footer /></> },
-  { path: "/inventory", element: <><Header /><Inventory /><Footer /></> },
-  { path: "/merch/:name", element: <><Header /><MerchDetail /><Footer /></> },
+  { path: "/catalogo", element: <><Header /><Catalogo /><Footer /></> },
+  { path: "/merch/:id", element: <><Header /><MerchDetail /><Footer /></> },
+  { path: "/carrito", element: <><Header /><Cart /><Footer /></> },
 
   //ADMIN PANEL ROUTES
 ])
