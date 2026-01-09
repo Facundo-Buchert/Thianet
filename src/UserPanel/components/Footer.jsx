@@ -1,6 +1,21 @@
 import "./Footer.css";
+import "./SizeGuideModal.jsx"
+import SizeGuideModal from "./SizeGuideModal.jsx";
+
+import { useState } from "react";
 
 export const Footer = () => {
+  const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+
+  const openModal = (e) => {
+    e.preventDefault();
+    setIsSizeGuideOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsSizeGuideOpen(false);
+  };
+
   return (
     <footer className="footer">
       <div className="footer-container">
@@ -26,7 +41,8 @@ export const Footer = () => {
         <div className="footer-column">
           <h4>Ayuda</h4>
           <ul>
-            <li><a href="#">Guía de talles</a></li>
+            <li><a onClick={openModal}>Guía de talles</a></li>
+            <SizeGuideModal isOpen={isSizeGuideOpen} onClose={closeModal} />
             <li><a href="#">Política de cambios</a></li>
             <li><a href="#">Contactanos</a></li>
           </ul>
