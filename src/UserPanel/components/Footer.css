@@ -25,6 +25,10 @@
   color: #e31e24;
 }
 
+.display-none {
+  display: none;
+}
+
 .tc-section {
   scroll-margin-top: 90px;
 }
