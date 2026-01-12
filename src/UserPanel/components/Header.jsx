@@ -23,7 +23,7 @@ export const Header = () => {
 
         <div className="header-actions">
           <input className="search" placeholder="Search" />
-          <span className="material-symbols-outlined">person</span>
+          <Link to="/profile/login"><span className="material-symbols-outlined">person</span></Link>
           <div className="cart">
             <Link to="/carrito">
               <span className="material-symbols-outlined">shopping_bag</span>

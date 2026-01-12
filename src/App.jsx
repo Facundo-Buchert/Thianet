@@ -4,6 +4,8 @@ import { Footer } from './UserPanel/components/Footer'
 import { Home } from './UserPanel/pages/Home'
 import { Cart } from './UserPanel/pages/Cart'
 import { Catalogo } from './UserPanel/pages/Catalogo'
+import { Login } from './UserPanel/pages/Login'
+import { Register } from './UserPanel/pages/Register'
 import FAQ from './UserPanel/pages/FAQ'
 import TermsAndConditions from './UserPanel/pages/TermsAndConditions'
 import MerchDetail  from './UserPanel/pages/MerchDetail'
@@ -15,6 +17,8 @@ const router = createBrowserRouter([
   { path: "/catalogo", element: <><Header /><Catalogo /><Footer /></> },
   { path: "/merch/:id", element: <><Header /><MerchDetail /><Footer /></> },
   { path: "/carrito", element: <><Header /><Cart /><Footer /></> },
+  { path: "/profile/login", element: <><Login></Login></>},
+  { path: "/profile/register", element: <><Register></Register></>},
   { path: "/preguntas-frecuentes", element: <><Header /><FAQ /><Footer /></> },
   { path: "/terminos-y-condiciones", element: <><Header /><TermsAndConditions /><Footer /></> },
 
