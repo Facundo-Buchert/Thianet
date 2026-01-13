@@ -84,17 +84,16 @@
   color: #000;
 }
 
-.badge {
+.badge{
   position: absolute;
-  top: -6px;
-  right: -6px;
-  background: #e31e24;
-  color: #fff;
+  top: 0px;
+  right: -25px;
+  background: #e31e25d8 !important;
+  color: #fff !important;
   font-size: 10px;
-  width: 16px;
-  height: 16px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
+

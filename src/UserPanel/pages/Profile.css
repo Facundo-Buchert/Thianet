@@ -1,0 +1,256 @@
+/* Profile.css - simple, limpio y responsive */
+
+.profile-page {
+  display: flex;
+  justify-content: center;
+  padding: 28px 16px;
+  background: var(--bg, #fcf8f8);
+  min-height: calc(100vh - 80px);
+  box-sizing: border-box;
+}
+
+.profile-card {
+  width: 100%;
+  max-width: 1100px;
+  background: #fff;
+  border: 1px solid #f3e7e8;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 6px 18px rgba(19,17,17,0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-sizing: border-box;
+}
+
+/* top */
+.profile-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.profile-name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #1b0d0e;
+}
+.profile-mail {
+  margin: 4px 0 0;
+  color: #8a6b6b;
+  font-size: 13px;
+}
+
+/* actions */
+.profile-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.btn-primary {
+  background: #ec131e;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-ghost {
+  background: transparent;
+  color: #1b0d0e;
+  border: 1px solid #eee;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* stats */
+.profile-stats {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 16px;
+  align-items: center;
+}
+
+.points-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  border-radius: 10px;
+  background: linear-gradient(180deg,#fff,#fff);
+  border: 1px solid #f3e7e8;
+  min-height: 120px;
+}
+.points-number {
+  font-size: 36px;
+  font-weight: 900;
+  color: #ec131e;
+}
+.points-label {
+  margin-top: 6px;
+  color: #7a5b5b;
+  font-size: 13px;
+}
+
+/* progress */
+.progress-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.progress-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  color: #4b3a3b;
+}
+.progress-bar {
+  width: 100%;
+  height: 10px;
+  background: #f0eaea;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid #f3e7e8;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ec131e, #c40f18);
+  transition: width 400ms ease;
+}
+.progress-meta {
+  color: #9c7b7b;
+  font-size: 13px;
+}
+
+/* benefits */
+.profile-benefits {
+  border-top: 1px solid #f3e7e8;
+  padding-top: 14px;
+}
+.benefits-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.benefits-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+}
+.chip {
+  background: #fff;
+  border: 1px solid #eee;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  color: #6b4d4d;
+}
+
+.benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.benefit-card {
+  border: 1px solid #f3e7e8;
+  padding: 12px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #fff;
+  min-height: 120px;
+  box-sizing: border-box;
+}
+.benefit-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.benefit-title {
+  font-weight: 800;
+  color: #1b0d0e;
+}
+.benefit-cost {
+  font-weight: 700;
+  color: #6b4d4d;
+  font-size: 13px;
+}
+.benefit-sub {
+  margin: 0;
+  color: #7a5b5b;
+  font-size: 13px;
+}
+.benefit-footer {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
+}
+.btn-small {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+}
+.btn-disabled {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #f3e3e3;
+  color: #9c7b7b;
+  border: 1px solid #f0dada;
+}
+
+/* states */
+.available {
+  box-shadow: 0 6px 18px rgba(236,19,30,0.06);
+  border-color: rgba(236,19,30,0.08);
+}
+.locked {
+  opacity: 0.9;
+  background: #fff;
+}
+
+/* message */
+.profile-msg {
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  text-align: center;
+}
+.profile-msg.ok {
+  background: #eaf6f1;
+  color: #0b6b3a;
+  border: 1px solid #d1f0de;
+}
+.profile-msg.err {
+  background: #fff0f0;
+  color: #8a2a2a;
+  border: 1px solid #f5d3d3;
+}
+
+/* responsive */
+@media (max-width: 900px) {
+  .profile-stats {
+    grid-template-columns: 1fr;
+  }
+  .benefits-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 520px) {
+  .benefits-grid {
+    grid-template-columns: 1fr;
+  }
+  .profile-card {
+    padding: 14px;
+  }
+  .profile-actions { flex-direction: column; gap: 6px; }
+}
