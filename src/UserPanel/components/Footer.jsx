@@ -50,14 +50,22 @@ export const Footer = () => {
           </ul>
         </div>
 
-        <div className="footer-column">
+
+        <form
+          className="footer-column"
+          action="https://formspree.io/f/mbddrgqq"
+          method="POST"
+        >
           <h4>Unite como reseller</h4>
           <p>¿Querés revender? Dejanos tu email y te contamos cómo.</p>
-          <div className="footer-form">
-            <input type="email" placeholder="Tu email" />
-            <button>Unite</button>
-          </div>
-        </div>
+          <label className="footer-form">
+            <input type="email" name="email"></input>
+            <textarea className="display-none" name="message" value={"Quiero ser revendedor, contactame."}></textarea>
+            <button type="submit">Unite</button>
+          </label>
+
+        </form>
+
       </div>
 
       <div className="footer-bottom">
