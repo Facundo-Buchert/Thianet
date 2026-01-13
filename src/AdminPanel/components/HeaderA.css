@@ -1,0 +1,116 @@
+/* HeaderA.css */
+.admin-header {
+  height: 64px;
+  background: var(--bg, #fcf8f8);
+  border-bottom: 1px solid #f3e7e8;
+  display: flex;
+  align-items: center;
+  padding: 0 18px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  z-index: 30;
+}
+
+.admin-header-inner {
+  width: 100%;
+  max-width: 1360px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-inner {
+  max-width: 1280px;
+  margin: auto;
+  padding: 0 32px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo a{
+  font-size: 32px;
+  font-weight: 900;
+  margin-left: -30%;
+  font-style: italic;
+  text-decoration: none;
+  color: #000;
+}
+
+.logo a:hover {
+  cursor: pointer;
+  color: #e31e24;
+}
+
+.logo a span {
+  color: #e31e24;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background-image: radial-gradient(circle at 30% 30%, #ec131e 0, rgba(236,19,30,0.85) 8%, #fff 60%);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
+.brand-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #1b0d0e;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #f3e7e8;
+  border: none;
+  cursor: pointer;
+}
+
+.icon-btn .material-symbols-outlined {
+  font-size: 20px;
+  color: #4b4b4b;
+}
+
+/* avatar */
+.admin-avatar-link {
+  display: inline-block;
+  margin-left: 6px;
+  text-decoration: none;
+}
+
+.admin-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background-size: cover;
+  background-position: center;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* small screens */
+@media (max-width: 720px) {
+  .brand-title { display: none; }
+  .admin-header { padding: 0 12px; }
+}

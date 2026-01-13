@@ -9,6 +9,13 @@ const BENEFITS = [
   { id: "b4", title: "Descuento Premium", subtitle: "20% para clientes VIP", cost: 1500 },
 ];
 
+const user = JSON.parse(localStorage.getItem("thianet_user"));
+let isAdmin = false;
+
+if (user.mail === "ventasthiagol20@gmail.com") {
+  isAdmin = true
+}
+
 export const Profile = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -79,6 +86,7 @@ export const Profile = () => {
           </div>
 
           <div className="profile-actions">
+            <button className="btn-admin" onClick={() => navigate("/admin") } style={{ display: isAdmin ? 'block' : 'none' }}>Panel Admin</button>
             <button className="btn-ghost" onClick={handleEdit}>Editar perfil</button>
             <button className="btn-primary" onClick={handleLogout}>Cerrar sesión</button>
           </div>
