@@ -1,0 +1,36 @@
+/* src/AdminPanel/pages/Orders.css */
+.ap-container { max-width: 1200px; margin: 0 auto; padding-bottom: 24px; }
+.ap-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.ap-actions { display: flex; gap: 12px; align-items: center; }
+.ap-search { display: flex; gap: 8px; align-items: center; }
+.ap-search input { padding: 8px 10px; border-radius: 8px; border: 1px solid #e9e9e9; min-width: 260px; }
+.ap-toolbar select, .ap-toolbar input { padding: 8px; border-radius: 8px; border: 1px solid #e9e9e9; }
+.ap-btn-clean { background: #2039c2; color: #fff; padding: 8px 10px; border-radius: 8px; border: 0; cursor: pointer; margin-left: 6px; }
+.ap-btn-refresh { background: #ec131e; color: #fff; padding: 8px 10px; border-radius: 8px; border: 0; cursor: pointer; margin-left: 6px; }
+
+.ap-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+.ap-table th, .ap-table td { padding: 12px; border-bottom: 1px solid #f3e7e8; text-align: left; vertical-align: middle; }
+.orders-table th:first-child, .orders-table td:first-child { width: 80px; }
+
+.ap-badge { display: inline-flex; padding: 4px 8px; border-radius: 999px; font-size: 12px; background: #fff0f5; color: #7a5860; border: 1px solid #fbe7ee; }
+.ap-badge.green { background: #ecfff4; color: #006a31; border: 1px solid #d7f9e3; }
+.ap-badge.red { background: #fff0f0; color: #9b1e1e; border: 1px solid #ffdada; }
+
+.ap-thumb { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; }
+
+.ap-controls button { background: transparent; border: 0; cursor: pointer; padding: 6px; border-radius: 8px; }
+.ap-controls select { padding: 6px 8px; border-radius: 8px; border: 1px solid #e9e9e9; background: white; }
+
+.order-row:hover { background: #fbf6f6; }
+.order-detail-row td { background: #fcfbfb; }
+
+.order-detail { display: flex; gap: 18px; padding: 12px 6px; align-items: flex-start; }
+.order-detail .detail-left { flex: 1; }
+.order-detail .detail-right { width: 260px; background: #fff; padding: 8px; border-radius: 8px; border: 1px solid #f3e7e8; }
+
+.ap-pagination { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 12px; }
+
+@media (max-width: 900px) {
+  .ap-search input { min-width: 140px; }
+  .order-detail { flex-direction: column; }
+}

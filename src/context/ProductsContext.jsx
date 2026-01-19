@@ -27,19 +27,21 @@ export const ProductsProvider = ({ children }) => {
 
   // traer todos los productos que tienen stock (una sola vez)
   const fetchAll = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('hasstock', true);
+  setLoading(true);
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('hasstock', true)
+    .eq('isVisible', true); // ✅ NUEVO
 
-    if (!error) setAllProducts(data || []);
-    else {
-      console.error('Products fetch error', error);
-      setAllProducts([]);
-    }
-    setLoading(false);
-  };
+  if (!error) setAllProducts(data || []);
+  else {
+    console.error('Products fetch error', error);
+    setAllProducts([]);
+  }
+  setLoading(false);
+};
+
 
   // trending (se mantiene independiente)
   const fetchTrending = async () => {
@@ -47,6 +49,7 @@ export const ProductsProvider = ({ children }) => {
       .from('products')
       .select('*')
       .eq('hasstock', true)
+      .eq('isVisible', true) // ✅ NUEVO
       .eq('isTrending', true)
       .limit(10);
 

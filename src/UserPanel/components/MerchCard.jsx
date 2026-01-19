@@ -23,7 +23,7 @@ export const MerchCard = ({ product }) => {
         <div className="card-footer">
           <span className="Price">${product.price}</span>
           <span className="Price0">${product.price0}</span>
-          <button className="btn-small">Agregar</button>
+          <button className="btn-small">Ver más</button>
         </div>
       </div>
     </div>

@@ -20,22 +20,22 @@ export default function AdminProducts() {
     // inject small CSS once
     if (!document.getElementById('admin-products-css')) {
       const css = `
-      .ap-container{max-width:1200px;margin:0 auto}
-      .ap-header{display:flex;justify-content:space-between;align-items:center;gap:16px}
-      .ap-actions{display:flex;gap:8px;align-items:center}
-      .ap-table{width:100%;border-collapse:collapse}
-      .ap-table th, .ap-table td{padding:12px;border-bottom:1px solid #f3e7e8;text-align:left}
-      .ap-badge{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:12px}
-      .ap-badge.green{background:#ecfff4;color:#006a31;border:1px solid #d7f9e3}
-      .ap-badge.red{background:#fff0f0;color:#9b1e1e;border:1px solid #ffdada}
-      .ap-thumb{width:64px;height:64px;border-radius:8px;object-fit:cover}
-      .ap-controls button{background:transparent;border:0;cursor:pointer;padding:6px;border-radius:8px}
-      .ap-search{display:flex;gap:8px;align-items:center}
-      .ap-search input{padding:8px 10px;border-radius:8px;border:1px solid #e9e9e9}
-      .ap-toolbar select, .ap-toolbar input{padding:8px;border-radius:8px;border:1px solid #e9e9e9}
-      .ap-pagination{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:12px}
-      @media (max-width:900px){.ap-table th:nth-child(3),.ap-table td:nth-child(3){display:none}}
-      `;
+        .ap-container{max-width:1200px;margin:0 auto}
+        .ap-header{display:flex;justify-content:space-between;align-items:center;gap:16px}
+        .ap-actions{display:flex;gap:8px;align-items:center}
+        .ap-table{width:100%;border-collapse:collapse}
+        .ap-table th, .ap-table td{padding:12px;border-bottom:1px solid #f3e7e8;text-align:left}
+        .ap-badge{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:12px}
+        .ap-badge.green{background:#ecfff4;color:#006a31;border:1px solid #d7f9e3}
+        .ap-badge.red{background:#fff0f0;color:#9b1e1e;border:1px solid #ffdada}
+        .ap-thumb{width:64px;height:64px;border-radius:8px;object-fit:cover}
+        .ap-controls button{background:transparent;border:0;cursor:pointer;padding:6px;border-radius:8px}
+        .ap-search{display:flex;gap:8px;align-items:center}
+        .ap-search input{padding:8px 10px;border-radius:8px;border:1px solid #e9e9e9}
+        .ap-toolbar select, .ap-toolbar input{padding:8px;border-radius:8px;border:1px solid #e9e9e9}
+        .ap-pagination{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:12px}
+        @media (max-width:900px){.ap-table th:nth-child(3),.ap-table td:nth-child(3){display:none}}
+        `;
       const s = document.createElement('style');
       s.id = 'admin-products-css';
       s.innerHTML = css;
@@ -124,21 +124,33 @@ export default function AdminProducts() {
   };
 
   const toggleVisibility = async (id, current) => {
+    const next = !Boolean(current);
+
     try {
-      const { error } = await supabase.from('products').update({ isVisible: !current }).eq('id', id);
+      const { error } = await supabase
+        .from('products')
+        .update({ isVisible: next })
+        .eq('id', id);
+
       if (error) throw error;
-      setAll(prev => prev.map(p => p.id === id ? { ...p, isVisible: !current } : p));
+
+      setAll(prev =>
+        prev.map(p =>
+          p.id === id ? { ...p, isVisible: next } : p
+        )
+      );
     } catch (err) {
       alert('Error actualizando visibilidad: ' + (err.message || err));
     }
   };
 
+
   return (
     <div className="ap-container">
       <div className="ap-header">
         <div>
-          <h1 style={{margin:0,fontSize:26}}>Gestión de Productos</h1>
-          <p style={{margin:0,color:'#7a5860'}}>Administra catálogo, inventario y visibilidad</p>
+          <h1 style={{ margin: 0, fontSize: 26 }}>Gestión de Productos</h1>
+          <p style={{ margin: 0, color: '#7a5860' }}>Administra catálogo, inventario y visibilidad</p>
         </div>
 
         <div className="ap-actions">
@@ -151,23 +163,23 @@ export default function AdminProducts() {
               {categories.map(c => <option key={c} value={c}>{c === 'all' ? 'Todas' : c}</option>)}
             </select>
 
-            <select value={status} onChange={e => { setStatus(e.target.value); setPage(1); }}>
+            <select value={status} onChange={e => { setStatus(e.target.value); setPage(1); }} style={{ margin: "10px" }}>
               <option value="all">Todos los Estados</option>
               <option value="visible">Visible</option>
               <option value="hidden">Oculto</option>
               <option value="out">Sin Stock</option>
             </select>
 
-            <button onClick={() => { setSearch(''); setCategory('all'); setStatus('all'); setPage(1); }}>Limpiar</button>
+            <button onClick={() => { setSearch(''); setCategory('all'); setStatus('all'); setPage(1); }} style={{ background: '#2039c2', color: '#fff', padding: '8px 12px', borderRadius: 8, border: 0, margin: "5px" }}>Limpiar</button>
 
-            <button onClick={() => window.location.href = '/admin/product/new'} style={{background:'#ec131e',color:'#fff',padding:'8px 12px',borderRadius:8,border:0}}>Añadir</button>
+            {/*<button onClick={() => window.location.href = '/admin/product/new'} style={{background:'#ec131e',color:'#fff',padding:'8px 12px',borderRadius:8,border:0,margin:"5px"}}>Añadir</button>*/}
           </div>
         </div>
       </div>
 
-      <div style={{marginTop:16}}>
-        {loading ? <p>Cargando...</p> : error ? <p style={{color:'red'}}>{error}</p> : (
-          <div style={{overflowX:'auto'}}>
+      <div style={{ marginTop: 16 }}>
+        {loading ? <p>Cargando...</p> : error ? <p style={{ color: 'red' }}>{error}</p> : (
+          <div style={{ overflowX: 'auto' }}>
             <table className="ap-table">
               <thead>
                 <tr>
@@ -176,7 +188,7 @@ export default function AdminProducts() {
                   <th>Precio</th>
                   <th>Stock</th>
                   <th>Estado</th>
-                  <th style={{textAlign:'right'}}>Acciones</th>
+                  <th style={{ textAlign: 'right' }}>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -186,21 +198,21 @@ export default function AdminProducts() {
                       <img className="ap-thumb" src={(p.img && p.img[0]) || (Array.isArray(p.img) ? p.img[0] : p.img) || '/placeholder.jpg'} alt={p.title} />
                     </td>
                     <td>
-                      <div style={{display:'flex',flexDirection:'column'}}>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <strong>{p.title}</strong>
-                        <small style={{color:'#7a5860'}}>ID: {p.id} • {p.category || '—'}</small>
+                        <small style={{ color: '#7a5860' }}>ID: {p.id} • {p.category || '—'}</small>
                       </div>
                     </td>
                     <td>
                       <div>
-                        <div style={{fontWeight:700}}>${Number(p.price0 ?? p.price ?? 0).toFixed(2)}</div>
-                        <small style={{color:'#7a5860'}}>pts</small>
+                        <div style={{ fontWeight: 700 }}>${Number(p.price0 ?? p.price ?? 0).toFixed(2)}</div>
+                        <small style={{ color: '#7a5860' }}>hasta {Math.round(p.price0 / 100)} pts</small>
                       </div>
                     </td>
                     <td>
-                      <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                         {p.stockPerSize && typeof p.stockPerSize === 'object' ?
-                          Object.entries(p.stockPerSize).map(([k,v]) => (
+                          Object.entries(p.stockPerSize).map(([k, v]) => (
                             <span key={k} className={`ap-badge ${Number(v) > 0 ? 'green' : 'red'}`}>{k}: {v}</span>
                           )) : <span>—</span>
                         }
@@ -209,22 +221,28 @@ export default function AdminProducts() {
                     <td>
                       {p.computedStatus === 'out' ? <span className="ap-badge red">Sin Stock</span> : (p.isVisible === false ? <span className="ap-badge">Oculto</span> : <span className="ap-badge green">Visible</span>)}
                     </td>
-                    <td style={{textAlign:'right'}} className="ap-controls">
-                      <button title="Editar" onClick={() => window.location.href = `/admin/product/${p.id}/edit`}>
+                    <td style={{ textAlign: 'right' }} className="ap-controls">
+                      <button title="Editar" onClick={() => window.location.href = `/admin/productos/${p.id}/edit`}>
                         <span className="material-symbols-outlined">edit</span>
                       </button>
-                      <button title="Toggle Visibilidad" onClick={() => toggleVisibility(p.id, p.isVisible)}>
-                        <span className="material-symbols-outlined">visibility</span>
+                      <button
+                        title={p.isVisible === false ? 'Mostrar producto' : 'Ocultar producto'}
+                        onClick={() => toggleVisibility(p.id, p.isVisible)}
+                      >
+                        <span className="material-symbols-outlined">
+                          {p.isVisible === false ? 'visibility_off' : 'visibility'}
+                        </span>
                       </button>
-                      <button title="Eliminar" onClick={() => removeProduct(p.id)}>
-                        <span className="material-symbols-outlined">delete</span>
-                      </button>
+
+                      {/*<button title="Eliminar" onClick={() => removeProduct(p.id)}>
+                          <span className="material-symbols-outlined">delete</span>
+                        </button>*/}
                     </td>
                   </tr>
                 ))}
 
                 {pageItems.length === 0 && (
-                  <tr><td colSpan={6}><div style={{padding:20,textAlign:'center',color:'#7a5860'}}>No hay resultados.</div></td></tr>
+                  <tr><td colSpan={6}><div style={{ padding: 20, textAlign: 'center', color: '#7a5860' }}>No hay resultados.</div></td></tr>
                 )}
               </tbody>
             </table>
@@ -232,12 +250,12 @@ export default function AdminProducts() {
         )}
 
         <div className="ap-pagination">
-          <div style={{flex:1}}>
-            <small>Mostrando {( (page - 1) * PAGE_SIZE) + 1} – {Math.min(page * PAGE_SIZE, total)} de {total}</small>
+          <div style={{ flex: 1 }}>
+            <small>Mostrando {((page - 1) * PAGE_SIZE) + 1} – {Math.min(page * PAGE_SIZE, total)} de {total}</small>
           </div>
-          <div style={{display:'flex',gap:8}}>
+          <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>Anterior</button>
-            <div style={{alignSelf:'center'}}>Página {page} / {maxPages}</div>
+            <div style={{ alignSelf: 'center' }}>Página {page} / {maxPages}</div>
             <button onClick={() => setPage(p => Math.min(maxPages, p + 1))} disabled={page === maxPages}>Siguiente</button>
           </div>
         </div>

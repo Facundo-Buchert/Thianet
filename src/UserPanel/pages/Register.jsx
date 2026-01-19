@@ -1,7 +1,9 @@
+// src/UserPanel/pages/Register.jsx
+
+// src/UserPanel/pages/Register.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import supabase from '../../../utils/supabase';
-import bcrypt from 'bcryptjs';
 import './Register.css';
 
 export const Register = () => {
@@ -48,44 +50,53 @@ export const Register = () => {
 
     setLoading(true);
 
-    // hash de la contraseña (cliente)
     try {
-      const salt = bcrypt.genSaltSync(10);
-      const hashed = bcrypt.hashSync(form.password, salt);
+      // 1) Crear usuario en Auth
+      const { data: signData, error: signErr } = await supabase.auth.signUp({
+        email: form.mail.trim().toLowerCase(),
+        password: form.password
+      });
 
-      const payload = {
-        name: form.name.trim(),
-        mail: form.mail.trim().toLowerCase(),
-        password: hashed,
-        number: form.number ? Number(String(form.number).replace(/\D/g, '')) : null,
-        instagram: form.instagram?.trim() || null,
-        adress: form.adress?.trim() || null,
-        adress_code: form.adress_code ? parseFloat(String(form.adress_code).replace(',', '.')) : null,
-        location: form.location?.trim() || null,
-        points: 0,
-        cart_items: '0'
-      };
-
-      const { data, error: supaErr } = await supabase
-        .from('users')
-        .insert([payload])
-        .select()
-        .single();
-
-      if (supaErr) {
-        // manejo de errores comunes (p. ej. unique constraint)
-        console.error('Supabase insert error', supaErr);
-        const msg = (supaErr?.code === '23505' || /unique/i.test(supaErr.message || '')) 
-          ? 'Ya existe una cuenta con ese email.' 
-          : (supaErr.message || 'Error al crear usuario.');
-        setError(msg);
+      if (signErr) {
+        setError(signErr.message || 'No se pudo crear la cuenta.');
         setLoading(false);
         return;
       }
 
-      setSuccessMsg('Cuenta creada correctamente.');
-      setLoading(false);
+      // 2) Completar datos del perfil creado por el trigger
+      const userId = signData?.user?.id;
 
+      if (userId) {
+        const payload = {
+          name: form.name.trim(),
+          mail: form.mail.trim().toLowerCase(),
+          number: form.number
+            ? Number(String(form.number).replace(/\D/g, ''))
+            : null,
+          instagram: form.instagram?.trim() || null,
+          address: form.adress?.trim() || null,
+          address_code: form.adress_code
+            ? parseFloat(String(form.adress_code).replace(',', '.'))
+            : null,
+          location: form.location?.trim() || null,
+          // estos normalmente ya existen, pero los dejamos explícitos
+          points: 0
+        };
+
+        const { error: updateErr } = await supabase
+          .from('users')
+          .update(payload)
+          .eq('id', userId);
+
+        if (updateErr) {
+          console.error('Error actualizando perfil:', updateErr);
+          // no rompas el registro, el usuario auth ya existe
+        }
+      }
+
+
+      setSuccessMsg('Cuenta creada. Te enviamos un email de confirmación si es necesario.');
+      setLoading(false);
       setTimeout(() => navigate('/profile/login'), 900);
     } catch (err) {
       console.error(err);

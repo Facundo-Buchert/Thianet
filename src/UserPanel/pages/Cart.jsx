@@ -1,10 +1,18 @@
 // src/UserPanel/pages/Cart.jsx
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import CartCard from '../components/CartCard';
+import supabase from '../../../utils/supabase';
 import './Cart.css';
 
 export const Cart = () => {
-  const { items, subtotal: effectiveSubtotal, totalQty } = useCart();
+  const navigate = useNavigate();
+  const { items, subtotal: effectiveSubtotal, totalQty, clearCart } = useCart();
+
+  const [loadingOrder, setLoadingOrder] = useState(false);
+  const [errorOrder, setErrorOrder] = useState(null);
+  const [successOrder, setSuccessOrder] = useState(null);
 
   if (items.length === 0) {
     return (
@@ -29,7 +37,76 @@ export const Cart = () => {
   const discounts = Math.max(0, itemsPrice - (Number(effectiveSubtotal) - itemsDiscountsBase || 0));
 
   // Total final = subtotal efectivo (itemsPrice - discounts)
-  const total = itemsPrice - discounts || 0;
+  const total = (itemsPrice - discounts) || 0;
+
+  // crear orden en la tabla 'orders'
+  const createOrder = async () => {
+    setErrorOrder(null);
+    setSuccessOrder(null);
+
+    // obtener usuario local (snapshot)
+    let user = null;
+    try {
+      user = JSON.parse(localStorage.getItem('thianet_user') || 'null');
+    } catch (e) {
+      user = null;
+    }
+
+    if (!user || !user.id) {
+      // sin usuario: redirigir a login para completar datos
+      navigate('/profile/login');
+      return;
+    }
+
+    // preparar items del pedido (snapshot)
+    const orderItems = items.map(it => ({
+      productId: it.productId,
+      title: it.title,
+      size: it.size,
+      qty: Number(it.qty || 0),
+      unitPrice: Number(it.price0 ?? it.price ?? 0)
+    }));
+
+    // payload para la tabla orders (ajustalo si tu tabla usa otros nombres)
+    const payload = {
+      clientId: user.id ?? null,
+      name: user.name ?? null,
+      mail: user.mail ?? null,
+      phone: user.number ?? null,
+      address: user.adress ?? null,
+      items: orderItems,
+      total: Number(total.toFixed(2)),
+      status: 'pending'
+    };
+
+    setLoadingOrder(true);
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .insert([payload])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Supabase insert error', error);
+        setErrorOrder(error.message || 'Error al crear la orden.');
+        setLoadingOrder(false);
+        return;
+      }
+
+      // éxito: limpiar carrito y mostrar mensaje
+      clearCart();
+      setSuccessOrder('Orden creada correctamente. Gracias por tu compra.');
+      setLoadingOrder(false);
+
+      // opcional: redirigir a perfil / pedidos (ajusta la ruta si tenés una específica)
+      setTimeout(() => navigate('/profile'), 1000);
+    } catch (err) {
+      console.error('Unexpected error creating order', err);
+      setErrorOrder('Error inesperado al crear la orden. Reintentá.');
+      setLoadingOrder(false);
+    }
+  };
 
   return (
     <main className="cart-page">
@@ -56,7 +133,7 @@ export const Cart = () => {
           <span>Descuentos</span>
           <strong className='discounts'>-${discounts.toFixed(2)}</strong>
         </div>
-        
+
         <div className="summary-row">
           <span>Total</span>
           <strong className='total'>${total.toFixed(2)}</strong>
@@ -64,10 +141,19 @@ export const Cart = () => {
 
         <hr /><br />
 
-        <button className="checkout-btn">
-          Crear orden
+        {errorOrder && <div className="form-error" style={{marginBottom:8}}>{errorOrder}</div>}
+        {successOrder && <div className="form-success" style={{marginBottom:8}}>{successOrder}</div>}
+
+        <button
+          className="checkout-btn"
+          onClick={createOrder}
+          disabled={loadingOrder}
+        >
+          {loadingOrder ? 'Creando orden...' : 'Crear orden'}
         </button>
       </aside>
     </main>
   );
 };
+
+export default Cart;

@@ -1,5 +1,8 @@
+// src/UserPanel/pages/Profile.jsx
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import supabase from "../../../utils/supabase";
 import "./Profile.css";
 
 const BENEFITS = [
@@ -9,53 +12,87 @@ const BENEFITS = [
   { id: "b4", title: "Descuento Premium", subtitle: "20% para clientes VIP", cost: 1500 },
 ];
 
-const user = JSON.parse(localStorage.getItem("thianet_user"));
-let isAdmin = false;
-
-if (user.mail === "ventasthiagol20@gmail.com") {
-  isAdmin = true
-}
-
 export const Profile = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [msg, setMsg] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  // lee usuario seguro desde localStorage
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("thianet_user");
-      if (!raw) {
+    const load = async () => {
+      try {
+        const { data: { user: authUser }, error: authErr } = await supabase.auth.getUser();
+        if (authErr) {
+          console.error("Auth error:", authErr);
+          navigate("/profile/login");
+          return;
+        }
+        if (!authUser) {
+          navigate("/profile/login");
+          return;
+        }
+
+        // traer perfil desde DB
+        const { data: profile, error: profileErr } = await supabase
+          .from("users")
+          .select("*")
+          .eq("id", authUser.id)
+          .single();
+
+        if (profileErr) {
+          console.error("Profile fetch error:", profileErr);
+          navigate("/profile/login");
+          return;
+        }
+        if (!profile) {
+          console.warn("No profile found for auth user:", authUser.id);
+          navigate("/profile/login");
+          return;
+        }
+
+        profile.points = Number(profile.points ?? 0);
+        setUser(profile);
+
+        // calcular admin según email del perfil
+        setIsAdmin(Boolean(profile.mail && profile.mail.toLowerCase() === "ventasthiagol20@gmail.com"));
+
+        // mantener en localStorage el objeto seguro si querés (clave consistente)
+        localStorage.setItem(
+          "thianet_user",
+          JSON.stringify({
+            id: profile.id,
+            name: profile.name,
+            mail: profile.mail,
+            points: profile.points,
+            historypoints: profile.historypoints
+          })
+        );
+      } catch (e) {
+        console.error("Unexpected error loading profile:", e);
         navigate("/profile/login");
-        return;
       }
-      const parsed = JSON.parse(raw);
-      if (!parsed || !parsed.name) {
-        navigate("/profile/login");
-        return;
-      }
-      // asegurar campos numéricos
-      parsed.points = Number(parsed.points ?? 0);
-      setUser(parsed);
-    } catch (e) {
-      navigate("/profile/login");
-    }
+    };
+    load();
     // eslint-disable-next-line
   }, []);
 
   if (!user) return null;
 
-  const historyPoints = Number(user.historyPoints || 0);
+  const historypoints = Number(user.historypoints || 0);
   const points = Number(user.points || 0);
 
-
   // siguiente meta: múltiplo de 250 (ej: 500, 750, 1000...)
-  const nextLevel = Math.max(250, Math.ceil((historyPoints + 1) / 250) * 250);
-  const progress = Math.min(100, Math.round((historyPoints / nextLevel) * 100));
-  const remaining = Math.max(0, nextLevel - historyPoints);
+  const nextLevel = Math.max(250, Math.ceil((historypoints + 1) / 250) * 250);
+  const progress = Math.min(100, Math.round((historypoints / nextLevel) * 100));
+  const remaining = Math.max(0, nextLevel - historypoints);
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error("Sign out error:", err);
+    }
+    localStorage.removeItem("thianet_user");
     navigate("/profile/login");
   };
 
@@ -68,10 +105,18 @@ export const Profile = () => {
       return;
     }
 
-    // simular canje: restar puntos y persistir en localStorage
+    // simular canje: restar puntos y persistir en localStorage (clave consistente)
     const updated = { ...user, points: points - benefit.cost };
-    localStorage.setItem("user", JSON.stringify(updated));
     setUser(updated);
+
+    localStorage.setItem("thianet_user", JSON.stringify({
+      id: updated.id,
+      name: updated.name,
+      mail: updated.mail,
+      points: updated.points,
+      historypoints: updated.historypoints
+    }));
+
     setMsg({ type: "success", text: `Canjeado: ${benefit.title}. -${benefit.cost} pts` });
     setTimeout(() => setMsg(null), 3000);
   };
@@ -86,7 +131,7 @@ export const Profile = () => {
           </div>
 
           <div className="profile-actions">
-            <button className="btn-admin" onClick={() => navigate("/admin") } style={{ display: isAdmin ? 'block' : 'none' }}>Panel Admin</button>
+            <button className="btn-admin" onClick={() => navigate("/admin")} style={{ display: isAdmin ? 'block' : 'none' }}>Panel Admin</button>
             <button className="btn-ghost" onClick={handleEdit}>Editar perfil</button>
             <button className="btn-primary" onClick={handleLogout}>Cerrar sesión</button>
           </div>

@@ -3,6 +3,7 @@
   grid-template-columns: 1fr 320px;
   gap: 32px;
   padding: 32px;
+  min-height: calc(100vh - 80px);
 }
 
 .cart-page.empty {
