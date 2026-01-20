@@ -8,7 +8,7 @@ import './Cart.css';
 
 export const Cart = () => {
   const navigate = useNavigate();
-  const { items, subtotal: effectiveSubtotal, totalQty, clearCart } = useCart();
+  const { items, clearCart } = useCart();
 
   const [loadingOrder, setLoadingOrder] = useState(false);
   const [errorOrder, setErrorOrder] = useState(null);
@@ -23,87 +23,82 @@ export const Cart = () => {
     );
   }
 
-  // subtotal mostrado en la UI = suma price0 * qty (lo mismo que se muestra en cada CartCard)
+  // subtotal real desde items
   const itemsPrice = items.reduce((acc, it) => {
-    const qty = Number(it.qty || 0);
-    const p0 = Number(it.price0 ?? it.price ?? 0);
-    return acc + qty * p0;
+    return acc + Number(it.qty || 0) * Number(it.price0 ?? it.price ?? 0);
   }, 0);
 
-  const itemsDiscountsBase = itemsPrice - itemsPrice / 1.14;
+  const total = Number(itemsPrice.toFixed(2));
 
-  // effectiveSubtotal viene del contexto y ya aplica price1/price2 según reglas (subtotal con descuentos)
-  // Descuentos = diferencia entre price0 total y subtotal efectivo
-  const discounts = Math.max(0, itemsPrice - (Number(effectiveSubtotal) - itemsDiscountsBase || 0));
-
-  // Total final = subtotal efectivo (itemsPrice - discounts)
-  const total = (itemsPrice - discounts) || 0;
-
-  // crear orden en la tabla 'orders'
   const createOrder = async () => {
     setErrorOrder(null);
     setSuccessOrder(null);
-
-    // obtener usuario local (snapshot)
-    let user = null;
-    try {
-      user = JSON.parse(localStorage.getItem('thianet_user') || 'null');
-    } catch (e) {
-      user = null;
-    }
-
-    if (!user || !user.id) {
-      // sin usuario: redirigir a login para completar datos
-      navigate('/profile/login');
-      return;
-    }
-
-    // preparar items del pedido (snapshot)
-    const orderItems = items.map(it => ({
-      productId: it.productId,
-      title: it.title,
-      size: it.size,
-      qty: Number(it.qty || 0),
-      unitPrice: Number(it.price0 ?? it.price ?? 0)
-    }));
-
-    // payload para la tabla orders (ajustalo si tu tabla usa otros nombres)
-    const payload = {
-      clientId: user.id ?? null,
-      name: user.name ?? null,
-      mail: user.mail ?? null,
-      phone: user.number ?? null,
-      address: user.adress ?? null,
-      items: orderItems,
-      total: Number(total.toFixed(2)),
-      status: 'pending'
-    };
-
     setLoadingOrder(true);
+
     try {
-      const { data, error } = await supabase
-        .from('orders')
-        .insert([payload])
-        .select()
+      /* 1) Usuario autenticado (supabase.user tiene `id` - UUID) */
+      const { data: { user }, error: authErr } = await supabase.auth.getUser();
+      if (authErr || !user) {
+        navigate('/profile/login');
+        return;
+      }
+
+      /* 2) Traer perfil desde public.users usando id (UUID) */
+      const { data: profile, error: profileErr } = await supabase
+        .from('users')
+        .select('id, userId, name, mail, number, address')
+        .eq('id', user.id)   // <<-- usar id (UUID) que viene de auth
         .single();
 
-      if (error) {
-        console.error('Supabase insert error', error);
-        setErrorOrder(error.message || 'Error al crear la orden.');
+      if (profileErr || !profile) {
+        console.error('Profile fetch error:', profileErr);
+        setErrorOrder('No se pudo cargar tu perfil.');
         setLoadingOrder(false);
         return;
       }
 
-      // éxito: limpiar carrito y mostrar mensaje
+      /* 3) Items EXACTOS para jsonb */
+      const orderItems = items.map(it => ({
+        productId: it.productId,
+        title: it.title,
+        size: it.size,
+        qty: Number(it.qty),
+        unitPrice: Number(it.price0 ?? it.price)
+      }));
+
+      /* 4) Payload final (clientId usa userId bigint de tu tabla) */
+      const payload = {
+        clientId: profile.userId ?? null,
+        name: profile.name ?? null,
+        mail: profile.mail ?? null,
+        phone: profile.number ?? null,
+        address: profile.address ?? null,
+        items: orderItems,
+        total,
+        status: 'pending'
+      };
+
+      /* 5) Insert */
+      const { error } = await supabase
+        .from('orders')
+        .insert([payload]);
+
+      if (error) {
+        console.error('Orders insert error:', error);
+        setErrorOrder('Error al crear la orden.');
+        setLoadingOrder(false);
+        return;
+      }
+
       clearCart();
-      setSuccessOrder('Orden creada correctamente. Gracias por tu compra.');
+      setSuccessOrder('Orden creada correctamente.');
       setLoadingOrder(false);
 
-      // opcional: redirigir a perfil / pedidos (ajusta la ruta si tenés una específica)
       setTimeout(() => navigate('/profile'), 1000);
+
     } catch (err) {
-      console.error('Unexpected error creating order', err);
-      setErrorOrder('Error inesperado al crear la orden. Reintentá.');
+      console.error('Unexpected error:', err);
+      setErrorOrder('Error inesperado.');
       setLoadingOrder(false);
     }
   };
@@ -125,24 +120,14 @@ export const Cart = () => {
         <h3>Resumen</h3>
 
         <div className="summary-row">
-          <span>Subtotal</span>
-          <strong className='subtotal'>${itemsPrice.toFixed(2)}</strong>
-        </div>
-
-        <div className="summary-row">
-          <span>Descuentos</span>
-          <strong className='discounts'>-${discounts.toFixed(2)}</strong>
-        </div>
-
-        <div className="summary-row">
           <span>Total</span>
-          <strong className='total'>${total.toFixed(2)}</strong>
+          <strong className="total">${total.toFixed(2)}</strong>
         </div>
 
         <hr /><br />
 
-        {errorOrder && <div className="form-error" style={{marginBottom:8}}>{errorOrder}</div>}
-        {successOrder && <div className="form-success" style={{marginBottom:8}}>{successOrder}</div>}
+        {errorOrder && <div className="form-error">{errorOrder}</div>}
+        {successOrder && <div className="form-success">{successOrder}</div>}
 
         <button
           className="checkout-btn"
