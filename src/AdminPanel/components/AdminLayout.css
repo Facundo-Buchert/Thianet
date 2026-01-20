@@ -1,0 +1,45 @@
+:root {
+    --admin-header-height: 64px;
+    --admin-sidebar-width: 260px;
+    --admin-gutter: 24px;
+    --border: #f3e7e8;
+    --bg-surface: #fff;
+    --accent: #ec131e;
+}
+
+/* Reset básico posible (si ya lo tenés en global, no romperá) */
+.admin-shell,
+.admin-main,
+.admin-container {
+    box-sizing: border-box;
+}
+
+.admin-secondline{
+    
+    display: flex;
+    justify-content: space-evenly;
+    
+}
+
+/* Main: deja espacio para header y sidebar */
+.admin-main {
+    margin: auto;
+    padding: calc(var(--admin-gutter) * 1.25);
+    min-height: calc(100vh - var(--admin-header-height));
+    background: var(--bg-surface);
+    transition: margin-left .2s ease;
+}
+
+/* contenedor interno para controlar ancho */
+.admin-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Responsive: sidebar colapsa */
+@media (max-width: 900px) {
+    .admin-main {
+        margin-left: 0;
+        padding: 16px;
+    }
+}

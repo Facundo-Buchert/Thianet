@@ -1,19 +1,43 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
+import supabase from '../../../utils/supabase';
 import './Header.css';
 
 export const Header = () => {
   const { totalQty } = useCart();
   const navigate = useNavigate();
+  const [hasSession, setHasSession] = useState(false);
 
-  const user = JSON.parse(localStorage.getItem("thianet_user"));
+  useEffect(() => {
+    // chequeo inicial
+    supabase.auth.getSession().then(({ data }) => {
+      setHasSession(!!data.session);
+    });
+
+    // listener por cambios de auth
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setHasSession(!!session);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+  console.log('SESSION CHECK');
+  supabase.auth.getSession().then(({ data }) => {
+    console.log('SESSION:', data.session);
+  });
+}, []);
+
 
   const handleUserClick = () => {
-    if (user) {
-      navigate("/profile");
+    if (hasSession) {
+      navigate('/profile');
     } else {
-      navigate("/profile/login");
+      navigate('/profile/login');
     }
   };
 

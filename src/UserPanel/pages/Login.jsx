@@ -1,8 +1,8 @@
+// src/UserPanel/pages/Login.jsx
 import "./Login.css";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import supabase from "../../../utils/supabase";
-import bcrypt from "bcryptjs";
 
 export const Login = () => {
   const navigate = useNavigate();
@@ -32,33 +32,40 @@ export const Login = () => {
     setLoading(true);
 
     try {
-      const { data, error: supaErr } = await supabase
+      // 1) Sign in with Supabase Auth
+      const { data: signData, error: signErr } = await supabase.auth.signInWithPassword({
+        email: form.mail.trim().toLowerCase(),
+        password: form.password
+      });
+
+      if (signErr || !signData?.user) {
+        setError("Credenciales incorrectas.");
+        setLoading(false);
+        return;
+      }
+
+      const userId = signData.user.id;
+
+      // 2) Traer perfil desde public.users
+      const { data: profile, error: profileErr } = await supabase
         .from("users")
         .select("*")
-        .eq("mail", form.mail.trim().toLowerCase())
+        .eq("id", userId)
         .single();
 
-      if (supaErr || !data) {
-        setError("Credenciales incorrectas.");
+      if (profileErr || !profile) {
+        // Puede pasar si no existe perfil: redirigir o crear perfil mínimo
+        setError("No se encontró perfil asociado. Contactá soporte.");
         setLoading(false);
         return;
       }
 
-      const isValid = await bcrypt.compare(form.password, data.password);
-
-      if (!isValid) {
-        setError("Credenciales incorrectas.");
-        setLoading(false);
-        return;
-      }
-
-      // guardar usuario SIN password
       const userSafe = {
-        id: data.id,
-        name: data.name,
-        mail: data.mail,
-        points: data.points || 0,
-        historyPoints: data.historyPoints || 0
+        id: profile.id,
+        name: profile.name,
+        mail: profile.mail,
+        points: profile.points || 0,
+        historyPoints: profile.historyPoints || 0
       };
 
       localStorage.setItem("thianet_user", JSON.stringify(userSafe));
