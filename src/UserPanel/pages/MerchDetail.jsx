@@ -1,3 +1,4 @@
+// src/Path/To/MerchDetail.jsx
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import supabase from '../../../utils/supabase';
@@ -29,7 +30,6 @@ const MerchDetail = () => {
     setIsSizeGuideOpen(false);
   };
 
-
   useEffect(() => {
     setProduct(null);
     setSelectedImg(0);
@@ -49,6 +49,8 @@ const MerchDetail = () => {
         // ensure consistent shapes
         if (!data.img) data.img = [];
         if (!data.stockPerSize) data.stockPerSize = {};
+        // ensure characteristics is an array (defensive)
+        if (!Array.isArray(data.characteristics)) data.characteristics = [];
         setProduct(data);
       }
       setLoading(false);
@@ -146,7 +148,7 @@ const MerchDetail = () => {
                 <span className="currency">$</span>
                 <span className="amount">{product.price0}</span>
               </div>
-              <div className="points">¡Podes ganar hasta <span className="points-amount">{Math.round(product.price0 / 100)}</span> puntos!</div>
+              <div className="points">¡Podes ganar hasta <span className="points-amount">{Math.round((product.price0 ?? 0) / 100)}</span> puntos!</div>
             </div>
 
             {/* optional rating placeholder */}
@@ -158,7 +160,7 @@ const MerchDetail = () => {
 
           <p className="description">{product.description}</p>
 
-          <hr></hr>
+          <hr />
 
           {/* Talles */}
           <div className="sizes-block">
@@ -237,18 +239,26 @@ const MerchDetail = () => {
             </button>
           </div>
 
-          {/* detalles colapsables (mock) */}
+          {/* detalles colapsables */}
           <div className="details">
             <details open>
               <summary>Características</summary>
-              <ul>
-                <li>100% Algodón peinado</li>
-                <li>Gramaje: 180 g/m²</li>
-                <li>Cuello redondo reforzado</li>
-                <li>Diseño exclusivo</li>
-              </ul>
+
+              {/* usa product.characteristics (array de textos) */}
+              {Array.isArray(product.characteristics) && product.characteristics.length > 0 ? (
+                <ul className="characteristics-list">
+                  {product.characteristics.map((c, idx) => (
+                    <li key={idx}>{c}</li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="muted">Sin características</div>
+              )}
+
             </details>
-            <br></br>
+
+            <br />
+
             <details>
               <summary>Envíos y Devoluciones</summary>
               <p>Envío y devoluciones según política.</p>
