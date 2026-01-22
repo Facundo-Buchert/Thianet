@@ -34,8 +34,8 @@ export const Footer = () => {
           <h4>Shop</h4>
           <ul>
             <li><Link to="/catalogo">Catálogo</Link></li>
-            <li><Link to="/preguntas-frecuentes">Preguntas Frecuentes</Link></li>
-            <li><Link to="/terminos-y-condiciones">Terminos y Condiciones</Link></li>
+            <li><Link to="/preguntas-frecuentes">Preguntas frecuentes</Link></li>
+            <li><Link to="/terminos-y-condiciones">Términos y condiciones</Link></li>
             <li><a href="https://www.instagram.com/thianet.ar/" target="blank">Instagram</a></li>
           </ul>
         </div>

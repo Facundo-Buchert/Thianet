@@ -260,7 +260,7 @@ const MerchDetail = () => {
             <br />
 
             <details>
-              <summary>Envíos y Devoluciones</summary>
+              <summary>Envíos y devoluciones</summary>
               <p>Envío y devoluciones según política.</p>
             </details>
           </div>

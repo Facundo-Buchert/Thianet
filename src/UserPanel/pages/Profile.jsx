@@ -9,7 +9,7 @@ const BENEFITS = [
   { id: "b1", title: "Descuento 10%", subtitle: "10% en tu próxima compra", cost: 500 },
   { id: "b2", title: "Descuento 15%", subtitle: "15% en cualquier artículo", cost: 1000 },
   { id: "b3", title: "Envío Gratis", subtitle: "Envío nacional gratuito", cost: 800 },
-  { id: "b4", title: "Descuento Premium", subtitle: "20% para clientes VIP", cost: 1500 },
+  { id: "b4", title: "Descuento premium", subtitle: "20% para clientes VIP", cost: 1500 },
 ];
 
 export const Profile = () => {
@@ -159,7 +159,7 @@ export const Profile = () => {
 
         <section className="profile-benefits">
           <div className="benefits-header">
-            <h2>Beneficios disponibles</h2>
+            <h2>Beneficios disponibles (Muy pronto!)</h2>
             <div className="benefits-controls">
               <span className="chip">Disponibles para mí</span>
             </div>
@@ -167,7 +167,10 @@ export const Profile = () => {
 
           <div className="benefits-grid">
             {BENEFITS.map(b => {
-              const available = points >= b.cost;
+              //COREGIR ACA CUANDO ESTEN LOS BENEFICIOS REALES
+              //const available = points >= b.cost;
+              const available = false;
+              
               return (
                 <article key={b.id} className={`benefit-card ${available ? "available" : "locked"}`}>
                   <div className="benefit-top">

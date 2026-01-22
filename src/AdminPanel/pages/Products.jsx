@@ -149,7 +149,7 @@ export default function AdminProducts() {
     <div className="ap-container">
       <div className="ap-header">
         <div>
-          <h1 style={{ margin: 0, fontSize: 26 }}>Gestión de Productos</h1>
+          <h1 style={{ margin: 0, fontSize: 26 }}>Gestión de productos</h1>
           <p style={{ margin: 0, color: '#7a5860' }}>Administra catálogo, inventario y visibilidad</p>
         </div>
 
@@ -164,10 +164,10 @@ export default function AdminProducts() {
             </select>
 
             <select value={status} onChange={e => { setStatus(e.target.value); setPage(1); }} style={{ margin: "10px" }}>
-              <option value="all">Todos los Estados</option>
+              <option value="all">Todos los estados</option>
               <option value="visible">Visible</option>
               <option value="hidden">Oculto</option>
-              <option value="out">Sin Stock</option>
+              <option value="out">Sin stock</option>
             </select>
 
             <button onClick={() => { setSearch(''); setCategory('all'); setStatus('all'); setPage(1); }} style={{ background: '#2039c2', color: '#fff', padding: '8px 12px', borderRadius: 8, border: 0, margin: "5px" }}>Limpiar</button>
@@ -219,7 +219,7 @@ export default function AdminProducts() {
                       </div>
                     </td>
                     <td>
-                      {p.computedStatus === 'out' ? <span className="ap-badge red">Sin Stock</span> : (p.isVisible === false ? <span className="ap-badge">Oculto</span> : <span className="ap-badge green">Visible</span>)}
+                      {p.computedStatus === 'out' ? <span className="ap-badge red">Sin stock</span> : (p.isVisible === false ? <span className="ap-badge">Oculto</span> : <span className="ap-badge green">Visible</span>)}
                     </td>
                     <td style={{ textAlign: 'right' }} className="ap-controls">
                       <button title="Editar" onClick={() => window.location.href = `/admin/productos/${p.id}/edit`}>
