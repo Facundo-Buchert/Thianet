@@ -1,9 +1,9 @@
 
+/* src/UserPanel/pages/Home.css */
+
 /* HERO */
 .hero {
   height: 420px;
-  background: linear-gradient(to right, rgba(0,0,0,.8), transparent),
-    url('https://images.unsplash.com/photo-1520974735194-6c9f01c44d9f') center/cover;
   display: flex;
   align-items: center;
 }
@@ -12,6 +12,7 @@
   max-width: 500px;
   margin-left: 80px;
   color: #fff;
+  text-shadow: black 4px 4px 3px;
 }
 
 .hero-content h2 {
