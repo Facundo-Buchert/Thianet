@@ -1,0 +1,36 @@
+/* Basado en la estética ap-* (combinable con el CSS global) */
+.clients-page { display:flex; flex-direction:column; gap:16px; }
+.clients-search { padding:8px 12px; border-radius:8px; border:1px solid #e9e9e9; min-width:220px; }
+.clients-table-wrapper { overflow-x:auto; border-radius:8px; }
+.clients-table th, .clients-table td { padding:12px; border-bottom:1px solid #f3e7e8; text-align:left; }
+.clients-empty { text-align:center; padding:20px; color:#7a5860; }
+.ap-controls button { margin-left:8px; padding:6px 8px; border-radius:6px; border:1px solid transparent; background:#f7f7f7; cursor:pointer; }
+.ap-controls button.danger { background:#ffecec; border-color:#f5c2c2; color:#a41b1b; }
+.ap-btn { background:#2039c2; color:#fff; padding:8px 10px; border-radius:8px; border:0; cursor:pointer; }
+.ap-btn-secondary { background:#fff; border:1px solid #e9e9e9; padding:8px 10px; border-radius:8px; cursor:pointer; }
+.mono { font-family: ui-monospace, SFMono-Regular, monospace; font-size:0.95rem; color:#4b4b4b; }
+
+/* Modal */
+.clients-modal-backdrop {
+  position:fixed; inset:0; background:rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:9999;
+}
+.clients-modal {
+  width:min(920px, 96vw); max-height:86vh; overflow:auto; background:#fff; border-radius:10px; padding:18px; box-shadow:0 10px 30px rgba(0,0,0,0.15);
+}
+.clients-modal-header { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; }
+.clients-modal-body section { margin-bottom:12px; }
+.clients-modal .detail-row { margin:6px 0; display:flex; gap:8px; align-items:center; }
+.cart-preview { background:#fafafa; padding:10px; border-radius:8px; border:1px dashed #eee; color:#3b3b3b; }
+.orders-list { list-style:none; padding-left:0; margin:0; }
+.orders-list li { padding:6px 0; border-bottom:1px dashed #f3e7e8; }
+.muted { color:#7a5860; }
+.ap-error { color: #a41b1b; }
+
+.clients-modal-actions{
+    display:flex;
+    gap:8px;
+}
+
+.clients-modal-actions button{
+    padding: 5px;
+}
