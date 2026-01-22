@@ -16,11 +16,11 @@ import MerchDetail from "./UserPanel/pages/MerchDetail";
 
 // Admin panel
 import { AdminLayout } from "./AdminPanel/components/AdminLayout";
-import { Dashboard } from "./AdminPanel/pages/Dashboard";
+import Dashboard from "./AdminPanel/pages/Dashboard";
 import Products from "./AdminPanel/pages/Products";
 import ProductsDetail from "./AdminPanel/pages/ProductsDetail";
 import Orders from "./AdminPanel/pages/Orders";
-import { Clients } from "./AdminPanel/pages/Clients";
+import Clients from "./AdminPanel/pages/Clients";
 import { Config } from "./AdminPanel/pages/Config";
 
 // Guards

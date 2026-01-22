@@ -1,0 +1,10 @@
+{
+  "imports": {
+    "xlsx": "https://esm.sh/xlsx@0.18.5"
+  },
+  "compilerOptions": {
+    "lib": ["deno.ns", "dom"],
+    "types": []
+  }
+}
+

@@ -41,17 +41,17 @@ const MenuA = () => {
             <span className="nav-text">Clientes</span>
           </NavLink>
 
-          <NavLink to="/admin/config" className={({isActive}) => isActive ? 'nav-item active' : 'nav-item'}>
+          {/*<NavLink to="/admin/config" className={({isActive}) => isActive ? 'nav-item active' : 'nav-item'}>
             <span className="material-symbols-outlined">settings</span>
             <span className="nav-text">Configuración</span>
-          </NavLink>
+          </NavLink>*/}
         </nav>
       </div>
 
       <div className="menu-bottom">
         <button className="logout-btn">
-          <span className="material-symbols-outlined">logout</span>
-          <span>Cerrar Sesión</span>
+          {/*<span className="material-symbols-outlined">logout</span>
+          <span>Cerrar Sesión</span>*/}
         </button>
       </div>
     </aside>

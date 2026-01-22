@@ -36,6 +36,29 @@ export default function Orders() {
     }
   };
 
+  const closeOrders = async () => {
+    if (!window.confirm('¿Desea cerrar las ordenes enviadas y canceladas? Esta acción no se puede deshacer.')) return;
+    try {
+
+      const { error, count } = await supabase
+
+      // cerrar órdenes con estado 'shipped' o 'canceled'
+      .from('orders')
+      .delete({ count: 'exact' })
+      .in('status', ['shipped', 'canceled']);
+
+      console.log('Órdenes eliminadas:', count);
+
+      if (error) throw error;
+
+      // refrescar lista
+      fetchOrders();
+
+    } catch (err) {
+      alert('Error al cerrar órdenes: ' + (err.message || err));
+    }
+  };
+
   useEffect(() => {
     fetchOrders();
   }, []);
@@ -45,14 +68,9 @@ export default function Orders() {
     return (orders || []).map(o => {
       const created = o.created_at ? new Date(o.created_at).toLocaleString() : '—';
       // items can be array or JSON string
-      let items = [];
-      try {
-        items = Array.isArray(o.items) ? o.items : (o.items ? JSON.parse(o.items) : []);
-      } catch (e) {
-        items = [];
-      }
+      let items = o.items;
       const totalItems = items.reduce((s, it) => s + (Number(it.qty || 0)), 0);
-      const totalAmount = Number(o.total ?? o.amount ?? 0);
+      const totalAmount = Number(o.total ?? 0);
       return { ...o, created, items, totalItems, totalAmount };
     });
   }, [orders]);
@@ -133,6 +151,7 @@ export default function Orders() {
 
             <button onClick={() => { setSearch(''); setStatus('all'); setPage(1); }} className="ap-btn-clean">Limpiar</button>
             <button onClick={fetchOrders} className="ap-btn-refresh">Refrescar</button>
+            <button onClick={closeOrders} className="ap-btn-close">Cerrar ordenes</button>
           </div>
         </div>
       </div>
@@ -200,7 +219,7 @@ export default function Orders() {
                               {o.items && o.items.length ? (
                                 <ul>
                                   {o.items.map((it, idx) => (
-                                    <li key={idx}>{it.title || it.productId} — qty: {it.qty} — ${Number(it.price || it.price0 || 0).toFixed(2)}</li>
+                                    <li key={idx}>{it.title || it.productId}  ({it.qty}) → ${Number(it.unitPrice || 0).toFixed(2)} c/u</li>
                                   ))}
                                 </ul>
                               ) : <div>Ningún artículo registrado</div>}

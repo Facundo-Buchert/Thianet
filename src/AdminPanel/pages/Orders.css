@@ -5,8 +5,9 @@
 .ap-search { display: flex; gap: 8px; align-items: center; }
 .ap-search input { padding: 8px 10px; border-radius: 8px; border: 1px solid #e9e9e9; min-width: 260px; }
 .ap-toolbar select, .ap-toolbar input { padding: 8px; border-radius: 8px; border: 1px solid #e9e9e9; }
-.ap-btn-clean { background: #2039c2; color: #fff; padding: 8px 10px; border-radius: 8px; border: 0; cursor: pointer; margin-left: 6px; }
-.ap-btn-refresh { background: #ec131e; color: #fff; padding: 8px 10px; border-radius: 8px; border: 0; cursor: pointer; margin-left: 6px; }
+.ap-btn-clean { background: #2094c2; color: #fff; padding: 8px 10px; border-radius: 8px; border: 0; cursor: pointer; margin-left: 6px; }
+.ap-btn-refresh { background: #14078b; color: #fff; padding: 8px 10px; border-radius: 8px; border: 0; cursor: pointer; margin-left: 6px; }
+.ap-btn-close { background: #9b1e28; color: #fff; padding: 8px 10px; border-radius: 8px; border: 0; cursor: pointer; margin-left: 6px; }
 
 .ap-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
 .ap-table th, .ap-table td { padding: 12px; border-bottom: 1px solid #f3e7e8; text-align: left; vertical-align: middle; }
