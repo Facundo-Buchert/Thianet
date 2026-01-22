@@ -20,6 +20,11 @@ export default function ProductsDetail() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
+  // Characteristics editing state
+  const [newChar, setNewChar] = useState('');
+  const [editingIndex, setEditingIndex] = useState(-1);
+  const [editingValue, setEditingValue] = useState('');
+
   useEffect(() => {
     if (!id) return;
     fetchProduct();
@@ -50,6 +55,7 @@ export default function ProductsDetail() {
         price2: data.price2 ?? '',
         isTrending: !!data.isTrending,
         isVisible: data.isVisible === undefined ? true : !!data.isVisible,
+        characteristics: Array.isArray(data.characteristics) ? data.characteristics.slice() : [],
       });
 
       const sp = data.stockPerSize && typeof data.stockPerSize === 'object' ? data.stockPerSize : {};
@@ -91,7 +97,6 @@ export default function ProductsDetail() {
     setSaving(true);
 
     try {
-      // Crear path único: products/{id}/{timestamp}-{sanitizedFilename}
       const timestamp = Date.now();
       const cleanName = file.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_.-]/g, '');
       const path = `products/${id}/${timestamp}-${cleanName}`;
@@ -102,9 +107,8 @@ export default function ProductsDetail() {
 
       if (upErr) throw upErr;
 
-      // obtener public url
       const { data: publicData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(path);
-      const url = (publicData && publicData.publicUrl) || '';
+      const url = (publicData && (publicData.publicUrl || publicData.public_url)) || '';
 
       // leer imgs actuales desde BD (para evitar race conditions)
       const { data: prodFresh, error: pErr } = await supabase
@@ -125,7 +129,6 @@ export default function ProductsDetail() {
 
       if (updErr) throw updErr;
 
-      // actualizar UI
       setImages(newImgs);
       setFile(null);
       setSuccess('Imagen subida');
@@ -145,16 +148,13 @@ export default function ProductsDetail() {
     setError(null);
 
     try {
-      // intentar derivar path del URL si es un public url de Supabase
       let path = null;
       try {
         const u = new URL(url);
-        // buscamos el segmento '/object/public/{bucket}/...'
         const marker = '/object/public/';
         const idx = u.pathname.indexOf(marker);
         if (idx >= 0) {
           const after = u.pathname.slice(idx + marker.length);
-          // after = '{bucket}/{path...}'
           const parts = after.split('/');
           if (parts[0] === BUCKET_NAME) {
             path = parts.slice(1).join('/');
@@ -164,16 +164,13 @@ export default function ProductsDetail() {
         path = null;
       }
 
-      // si tenemos path, intentamos borrar del storage
       if (path) {
         const { error: delErr } = await supabase.storage.from(BUCKET_NAME).remove([path]);
         if (delErr) {
-          // no fatal: continuamos para limpiar DB
           console.warn('No se pudo borrar archivo del storage:', delErr.message);
         }
       }
 
-      // actualizar DB: obtener imgs y filtrar
       const { data: prodFresh, error: pErr } = await supabase
         .from('products')
         .select('img')
@@ -203,6 +200,63 @@ export default function ProductsDetail() {
     }
   };
 
+  // Characteristics helpers (add / edit / remove)
+  const addCharacteristic = () => {
+    const v = (newChar || '').toString().trim();
+    if (!v) {
+      setError('Característica vacía');
+      return;
+    }
+    const existing = form.characteristics || [];
+    if (existing.map(x => x.toLowerCase()).includes(v.toLowerCase())) {
+      setError('Característica ya existe');
+      return;
+    }
+    const updated = [...existing, v];
+    setForm(f => ({ ...f, characteristics: updated }));
+    setNewChar('');
+    setError(null);
+  };
+
+  const startEditCharacteristic = (index) => {
+    setEditingIndex(index);
+    setEditingValue(form.characteristics?.[index] || '');
+    setError(null);
+  };
+
+  const saveEditCharacteristic = () => {
+    const v = (editingValue || '').toString().trim();
+    if (!v) {
+      setError('Característica vacía');
+      return;
+    }
+    const existing = form.characteristics || [];
+    // check duplicates except same index
+    const lower = existing.map(x => x.toLowerCase());
+    if (lower.some((x, i) => x === v.toLowerCase() && i !== editingIndex)) {
+      setError('Otra característica con el mismo texto ya existe');
+      return;
+    }
+    const updated = existing.map((c, i) => (i === editingIndex ? v : c));
+    setForm(f => ({ ...f, characteristics: updated }));
+    setEditingIndex(-1);
+    setEditingValue('');
+    setError(null);
+  };
+
+  const cancelEditCharacteristic = () => {
+    setEditingIndex(-1);
+    setEditingValue('');
+    setError(null);
+  };
+
+  const removeCharacteristic = (index) => {
+    if (!window.confirm('Eliminar característica?')) return;
+    const existing = form.characteristics || [];
+    const updated = existing.filter((_, i) => i !== index);
+    setForm(f => ({ ...f, characteristics: updated }));
+  };
+
   // SAVE product fields (not images)
   const onSave = async () => {
     setSaving(true);
@@ -228,6 +282,7 @@ export default function ProductsDetail() {
         isTrending: !!form.isTrending,
         isVisible: !!form.isVisible,
         stockPerSize: Object.keys(stockObj).length ? stockObj : null,
+        characteristics: Array.isArray(form.characteristics) ? form.characteristics : [],
       };
 
       const { data, error } = await supabase
@@ -258,7 +313,6 @@ export default function ProductsDetail() {
 
     try {
       // opcional: eliminar imágenes del storage
-      // primero obtener imgs y derivar paths
       try {
         const { data: prodFresh } = await supabase.from('products').select('img').eq('id', id).single();
         const currImgs = Array.isArray(prodFresh?.img) ? prodFresh.img : (prodFresh?.img ? [prodFresh.img] : []);
@@ -285,7 +339,6 @@ export default function ProductsDetail() {
           if (remErr) console.warn('Error al eliminar imágenes del storage:', remErr.message);
         }
       } catch (e) {
-        // continue
         console.warn('No se pudo limpiar storage al borrar producto', e.message || e);
       }
 
@@ -307,7 +360,11 @@ export default function ProductsDetail() {
   return (
     <div className="pd-container">
       <div className="pd-header">
-        <h2>Editar producto — ID {product.id}</h2>
+        <div>
+          <h2>Editar producto — ID {product.id}</h2>
+          <div className="pd-subtitle">{product.title}</div>
+        </div>
+
         <div className="pd-actions">
           <button className="btn danger" onClick={onDelete} disabled={saving}>Eliminar</button>
           <button className="btn primary" onClick={onSave} disabled={saving}>{saving ? 'Guardando...' : 'Guardar cambios'}</button>
@@ -361,13 +418,64 @@ export default function ProductsDetail() {
             <span>Visible</span>
           </label>
 
+          <div className="characteristics-section">
+            <label>Características</label>
+
+            <div className="char-list">
+              {(form.characteristics || []).length === 0 && <div className="muted">Sin características</div>}
+
+              {(form.characteristics || []).map((c, idx) => (
+                <div key={idx} className="char-item">
+                  {editingIndex === idx ? (
+                    <>
+                      <input
+                        className="char-edit-input"
+                        value={editingValue}
+                        onChange={e => setEditingValue(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') saveEditCharacteristic();
+                          if (e.key === 'Escape') cancelEditCharacteristic();
+                        }}
+                        autoFocus
+                      />
+                      <div className="char-actions">
+                        <button className="btn-ghost small" onClick={saveEditCharacteristic}>Guardar</button>
+                        <button className="btn-ghost small" onClick={cancelEditCharacteristic}>Cancelar</button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="char-chip">{c}</div>
+                      <div className="char-actions">
+                        <button className="btn-ghost small" onClick={() => startEditCharacteristic(idx)}>Editar</button>
+                        <button className="btn-ghost small danger" onClick={() => removeCharacteristic(idx)}>Eliminar</button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="char-add-row">
+              <input
+                placeholder="Agregar característica (ej: '100% algodón')"
+                value={newChar}
+                onChange={e => setNewChar(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') addCharacteristic(); }}
+              />
+              <button className="btn" onClick={addCharacteristic}>Añadir</button>
+            </div>
+          </div>
+
           <div className="images-section">
             <label>Imágenes</label>
             <div className="thumbnails">
               {images.map((u, idx) => (
                 <div className="thumb" key={u + idx}>
                   <img src={u} alt={`img-${idx}`} />
-                  <button className="small" onClick={() => removeImage(u)} disabled={saving}>Eliminar</button>
+                  <div className="thumb-actions">
+                    <button className="small" onClick={() => removeImage(u)} disabled={saving}>Eliminar</button>
+                  </div>
                 </div>
               ))}
               {images.length === 0 && <div className="muted">Sin imágenes</div>}
