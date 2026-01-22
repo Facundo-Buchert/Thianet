@@ -40,8 +40,13 @@
 .card-footer {
   margin-top: 16px;
   display: flex;  
-  justify-content: space-between;
-  align-items: center;
+  justify-content: flex-start ;
+  align-items: left;
+}
+
+.card-footer span{
+  margin-right: 12px;
+  font-size: 18px;
 }
 
 .Price {
