@@ -46,18 +46,9 @@ export const Catalogo = () => {
             {search && <button className="clear" onClick={() => setSearch('')}>✕</button>}
           </div>
 
-          <div className="category-chips" role="tablist">
-            {categories.map(cat => (
-              <button
-                key={cat}
-                className={`chip ${cat === category ? 'active' : ''}`}
-                onClick={() => setCategory(cat)}
-                aria-pressed={cat === category}
-              >
-                {cat === 'all' ? 'Todas' : cat}
-              </button>
-            ))}
-          </div>
+          <select value={category} onChange={e => { setCategory(e.target.value); setPage(1); }}>
+              {categories.map(c => <option key={c} value={c}>{c === 'all' ? 'Todas' : c}</option>)}
+            </select>
 
           <div className="right-filters">
             <select

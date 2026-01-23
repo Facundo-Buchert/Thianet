@@ -1,16 +1,13 @@
-// src/Path/To/MerchDetail.jsx
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import supabase from '../../../utils/supabase';
 import { useCart } from '../../context/CartContext';
-import SizeSelector from '../components/SizeSelector';
 import SizeGuideModal from '../components/SizeGuideModal';
 import './MerchDetail.css';
 
-const placeholder =
-  'https://via.placeholder.com/800x1000?text=Sin+imagen';
+const placeholder = 'https://via.placeholder.com/800x1000?text=Sin+imagen';
 
-const MerchDetail = () => {
+export default function MerchDetail() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [selectedImg, setSelectedImg] = useState(0);
@@ -21,15 +18,6 @@ const MerchDetail = () => {
 
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
 
-  const openModal = (e) => {
-    e.preventDefault();
-    setIsSizeGuideOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsSizeGuideOpen(false);
-  };
-
   useEffect(() => {
     setProduct(null);
     setSelectedImg(0);
@@ -38,37 +26,45 @@ const MerchDetail = () => {
 
     const fetchProduct = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('id', id)
-        .single();
-      if (error) {
-        console.error('Error fetching product:', error);
-      } else {
-        // ensure consistent shapes
-        if (!data.img) data.img = [];
-        if (!data.stockPerSize) data.stockPerSize = {};
-        // ensure characteristics is an array (defensive)
-        if (!Array.isArray(data.characteristics)) data.characteristics = [];
-        setProduct(data);
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching product:', error);
+          setProduct(null);
+        } else {
+          if (!Array.isArray(data.img)) data.img = Array.isArray(data.img) ? data.img : [];
+          if (!data.stockPerSize || typeof data.stockPerSize !== 'object') data.stockPerSize = {};
+          if (!Array.isArray(data.characteristics)) data.characteristics = [];
+          setProduct(data);
+        }
+      } catch (e) {
+        console.error('Exception fetching product:', e);
+        setProduct(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     if (id) fetchProduct();
   }, [id]);
 
-  if (loading) return <div className="merch-loading">Cargando...</div>;
-  if (!product) return null;
+  // Mostrar skeleton cuando carga o no hay producto aún
+  const isLoading = loading || !product;
 
-  const images = Array.isArray(product.img) ? product.img : [];
-  const mainImage = images[selectedImg] ?? placeholder;
+  const images = Array.isArray(product?.img) ? product.img : [];
+  const mainImage = !isLoading ? (images[selectedImg] ?? placeholder) : null;
 
-  const stockObj = product.stockPerSize || {};
-  // stockObj values may be strings (jsonb), convert to number safely
+  const stockObj = product?.stockPerSize || {};
   const sizes = Object.entries(stockObj).map(([k, v]) => [k, Number(v)]);
   const maxForSelected = selectedSize ? Number(stockObj[selectedSize] ?? 0) : 0;
+
+  const openModal = (e) => { e?.preventDefault?.(); setIsSizeGuideOpen(true); };
+  const closeModal = () => setIsSizeGuideOpen(false);
 
   const handleQtyChange = (next) => {
     if (!selectedSize) return setQty(1);
@@ -79,6 +75,7 @@ const MerchDetail = () => {
   };
 
   const addToCart = () => {
+    if (isLoading) return;
     if (!selectedSize) return;
     const available = Number(product.stockPerSize?.[selectedSize] ?? 0);
     addItem({
@@ -99,16 +96,22 @@ const MerchDetail = () => {
       <div className="detail-grid">
         {/* LEFT: galería */}
         <div className="images">
-          <div
-            className="main-image"
-            role="img"
-            aria-label={product.title}
-            style={{ backgroundImage: `url(${mainImage})` }}
-          />
+          {isLoading ? (
+            <div className="main-image skeleton-box" />
+          ) : (
+            <div
+              className="main-image"
+              role="img"
+              aria-label={product.title}
+              style={{ backgroundImage: `url(${mainImage})` }}
+            />
+          )}
 
           <div className="thumbs" role="tablist" aria-label="Miniaturas">
-            {/* always show up to 4 thumbs horizontally */}
-            {images.length === 0 ? (
+            {isLoading ? (
+              // 4 thumbs skeleton
+              [0,1,2,3].map(i => <div className="thumb skeleton-box" key={i} />)
+            ) : images.length === 0 ? (
               <button
                 className="thumb active"
                 style={{ backgroundImage: `url(${placeholder})` }}
@@ -122,7 +125,6 @@ const MerchDetail = () => {
                   className={`thumb ${i === selectedImg ? 'active' : ''}`}
                   onClick={() => {
                     setSelectedImg(i);
-                    // reset focus a la imagen
                     const el = document.querySelector('.main-image');
                     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                   }}
@@ -135,61 +137,85 @@ const MerchDetail = () => {
         </div>
 
         {/* RIGHT: info */}
-        <div className="info">
+        <div className={`info ${isLoading ? 'skeleton' : ''}`}>
           <div className="info-top">
-            <h1 className="title">{product.title}</h1>
+            {isLoading ? (
+              <div className="skeleton-line title" style={{ width: '60%', height: 28 }} />
+            ) : (
+              <h1 className="title">{product.title}</h1>
+            )}
 
             <div className="meta">
-              <div className="price">
-                <span className="currency">$</span>
-                <span className="amount">{product.price}</span>
-              </div>
-              <div className="price0">
-                <span className="currency">$</span>
-                <span className="amount">{product.price0}</span>
-              </div>
-              <div className="points">¡Podes ganar hasta <span className="points-amount">{Math.round((product.price0 ?? 0) / 100)}</span> puntos!</div>
+              {isLoading ? (
+                <>
+                  <div className="skeleton-line" style={{ width: 80, height: 18 }} />
+                  <div className="skeleton-line" style={{ width: 140, height: 28 }} />
+                </>
+              ) : (
+                <>
+                  <div className="price">
+                    <span className="currency">$</span>
+                    <span className="amount">{product.price}</span>
+                  </div>
+                  <div className="price0">
+                    <span className="currency">$</span>
+                    <span className="amount">{product.price0}</span>
+                  </div>
+                </>
+              )}
             </div>
-
-            {/* optional rating placeholder */}
-            {/*<div className="rating">
-              <div className="stars" aria-hidden="true">★★★★★</div>
-              <div className="reviews">124 opiniones</div>
-            </div>*/}
           </div>
 
-          <p className="description">{product.description}</p>
+          {isLoading ? (
+            <div className="skeleton-line" style={{ height: 56, width: '100%', marginTop: 12 }} />
+          ) : (
+            <p className="description">{product.description}</p>
+          )}
 
           <hr />
 
           {/* Talles */}
           <div className="sizes-block">
             <div className="sizes-header">
-              <h4>Selecciona tu talla</h4>
-              <button onClick={openModal} className="size-guide" type="button">Guía de talles</button>
+              {isLoading ? (
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <div className="skeleton-line" style={{ width: 160, height: 20 }} />
+                  <div className="skeleton-line" style={{ width: 80, height: 28 }} />
+                </div>
+              ) : (
+                <>
+                  <h4>Selecciona tu talla</h4>
+                  <button onClick={openModal} className="size-guide" type="button">Guía de talles</button>
+                </>
+              )}
               <SizeGuideModal isOpen={isSizeGuideOpen} onClose={closeModal} />
             </div>
 
             <div className="size-grid">
-              {sizes.length === 0 && <div className="no-sizes">Sin talles</div>}
-              {sizes.map(([size, stock]) => {
-                const disabled = stock <= 0;
-                return (
-                  <button
-                    key={size}
-                    className={`size-btn ${selectedSize === size ? 'selected' : ''}`}
-                    onClick={() => !disabled && setSelectedSize(size)}
-                    disabled={disabled}
-                    aria-pressed={selectedSize === size}
-                  >
-                    {size}
-                    {disabled && <span className="sr-only"> (Agotado)</span>}
-                  </button>
-                );
-              })}
+              {isLoading ? (
+                [0,1,2,3].map(i => <div key={i} className="size-btn skeleton-box" style={{ height: 44, width: 80 }} />)
+              ) : sizes.length === 0 ? (
+                <div className="no-sizes">Sin talles</div>
+              ) : (
+                sizes.map(([size, stock]) => {
+                  const disabled = stock <= 0;
+                  return (
+                    <button
+                      key={size}
+                      className={`size-btn ${selectedSize === size ? 'selected' : ''}`}
+                      onClick={() => !disabled && setSelectedSize(size)}
+                      disabled={disabled || isLoading}
+                      aria-pressed={selectedSize === size}
+                    >
+                      {size}
+                      {disabled && <span className="sr-only"> (Agotado)</span>}
+                    </button>
+                  );
+                })
+              )}
             </div>
 
-            {selectedSize && (
+            {selectedSize && !isLoading && (
               <p className="stock-note">
                 {maxForSelected > 0 ? (
                   maxForSelected >= 3 ? (
@@ -211,31 +237,26 @@ const MerchDetail = () => {
           {/* cantidad + CTA */}
           <div className="actions-row">
             <div className="qty-control" aria-label="Cantidad">
-              <button
-                onClick={() => handleQtyChange(qty - 1)}
-                aria-label="Disminuir cantidad"
-              >−</button>
+              <button onClick={() => handleQtyChange(qty - 1)} aria-label="Disminuir cantidad" disabled={isLoading}>−</button>
               <input
                 type="number"
                 min="1"
                 value={qty}
                 onChange={(e) => handleQtyChange(Number(e.target.value || 1))}
                 aria-label="Cantidad"
+                disabled={isLoading}
               />
-              <button
-                onClick={() => handleQtyChange(qty + 1)}
-                aria-label="Aumentar cantidad"
-              >+</button>
+              <button onClick={() => handleQtyChange(qty + 1)} aria-label="Aumentar cantidad" disabled={isLoading}>+</button>
             </div>
 
             <button
               className="add-btn"
               onClick={addToCart}
-              disabled={!selectedSize || maxForSelected <= 0}
-              aria-disabled={!selectedSize || maxForSelected <= 0}
+              disabled={isLoading || !selectedSize || maxForSelected <= 0}
+              aria-disabled={isLoading || !selectedSize || maxForSelected <= 0}
             >
               <span className="cart-icon">🛒</span>
-              Añadir al carrito
+              {isLoading ? 'Cargando...' : 'Añadir al carrito'}
             </button>
           </div>
 
@@ -244,17 +265,20 @@ const MerchDetail = () => {
             <details open>
               <summary>Características</summary>
 
-              {/* usa product.characteristics (array de textos) */}
-              {Array.isArray(product.characteristics) && product.characteristics.length > 0 ? (
-                <ul className="characteristics-list">
-                  {product.characteristics.map((c, idx) => (
-                    <li key={idx}>{c}</li>
-                  ))}
-                </ul>
+              {isLoading ? (
+                <>
+                  <div className="skeleton-line" style={{ height: 14, width: '70%' }} />
+                  <div className="skeleton-line" style={{ height: 14, width: '50%' }} />
+                </>
               ) : (
-                <div className="muted">Sin características</div>
+                Array.isArray(product.characteristics) && product.characteristics.length > 0 ? (
+                  <ul className="characteristics-list">
+                    {product.characteristics.map((c, idx) => <li key={idx}>{c}</li>)}
+                  </ul>
+                ) : (
+                  <div className="muted">Sin características</div>
+                )
               )}
-
             </details>
 
             <br />
@@ -268,6 +292,4 @@ const MerchDetail = () => {
       </div>
     </main>
   );
-};
-
-export default MerchDetail;
+}
