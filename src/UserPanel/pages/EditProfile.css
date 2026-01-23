@@ -1,0 +1,195 @@
+/* ====== LAYOUT GENERAL ====== */
+.edit-profile-page {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 28px 20px;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  color: #222;
+}
+
+.edit-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.edit-profile-header h1 {
+  font-size: 26px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.edit-profile-header p {
+  margin: 0;
+  color: #6b6b6b;
+  font-size: 14px;
+}
+
+/* ====== CARD ====== */
+.edit-profile-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 26px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.06);
+}
+
+/* ====== SECCIONES ====== */
+.profile-section {
+  margin-bottom: 28px;
+}
+
+.profile-section:last-child {
+  margin-bottom: 0;
+}
+
+.profile-section h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: #111;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-section h3::before {
+  content: '';
+  width: 4px;
+  height: 16px;
+  border-radius: 4px;
+  background: #e31e24;
+}
+
+/* ====== FORM ====== */
+.profile-form {
+  display: grid;
+  gap: 14px;
+}
+
+.profile-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.profile-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-group label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #333;
+}
+
+.profile-group input {
+  padding: 11px 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e5e5;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.profile-group input:focus {
+  border-color: #e31e24;
+  box-shadow: 0 0 0 2px rgba(227, 30, 36, 0.12);
+}
+
+/* ====== ACCIONES ====== */
+.profile-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+  gap: 12px;
+}
+
+.profile-actions .hint {
+  font-size: 13px;
+  color: #777;
+}
+
+.save-btn {
+  background: #e31e24;
+  color: #fff;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.save-btn:hover {
+  background: #c81b20;
+  transform: translateY(-1px);
+}
+
+.save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ====== MENSAJES ====== */
+.profile-error {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #fff1f2;
+  color: #b91c1c;
+  font-size: 14px;
+}
+
+.profile-success {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #ecfdf5;
+  color: #065f46;
+  font-size: 14px;
+}
+
+/* ====== SKELETON ====== */
+.profile-skeleton {
+  display: grid;
+  gap: 14px;
+}
+
+.skeleton-line {
+  height: 44px;
+  border-radius: 10px;
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #e6e6e6 37%,
+    #f0f0f0 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0 0; }
+}
+
+/* ====== RESPONSIVE ====== */
+@media (max-width: 720px) {
+  .profile-row {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .save-btn {
+    width: 100%;
+  }
+}

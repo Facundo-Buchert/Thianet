@@ -10,6 +10,7 @@ import { Catalogo } from "./UserPanel/pages/Catalogo";
 import { Login } from "./UserPanel/pages/Login";
 import { Register } from "./UserPanel/pages/Register";
 import { Profile } from "./UserPanel/pages/Profile";
+import { EditProfile } from "./UserPanel/pages/EditProfile";
 import FAQ from "./UserPanel/pages/FAQ";
 import TermsAndConditions from "./UserPanel/pages/TermsAndConditions";
 import MerchDetail from "./UserPanel/pages/MerchDetail";
@@ -48,6 +49,12 @@ const router = createBrowserRouter([
 
   { path: "/profile/login", element: <Login /> },
   { path: "/profile/register", element: <Register /> },
+  
+  { path: "/profile/edit", element: 
+    <ProtectedRoute>
+      <Header /><EditProfile /><Footer />
+    </ProtectedRoute>
+  },
 
   { path: "/preguntas-frecuentes", element: <><Header /><FAQ /><Footer /></> },
   { path: "/terminos-y-condiciones", element: <><Header /><TermsAndConditions /><Footer /></> },
