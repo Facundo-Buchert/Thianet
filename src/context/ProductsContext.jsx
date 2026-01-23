@@ -25,40 +25,71 @@ export const ProductsProvider = ({ children }) => {
     return () => clearTimeout(t);
   }, [search]);
 
-  // traer todos los productos que tienen stock (una sola vez)
+  // traer todos los productos que tienen stock (una sola vez) - implementado en batches para evitar límite 1000
   const fetchAll = async () => {
-  setLoading(true);
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .eq('hasstock', true)
-    .eq('isVisible', true); // ✅ NUEVO
+    setLoading(true);
+    try {
+      const BATCH = 1000; // tamaño por petición (Supabase suele limitar por defecto a 1000)
+      let from = 0;
+      let all = [];
 
-  if (!error) setAllProducts(data || []);
-  else {
-    console.error('Products fetch error', error);
-    setAllProducts([]);
-  }
-  setLoading(false);
-};
+      while (true) {
+        // pedimos un rango
+        const to = from + BATCH - 1;
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('hasstock', true)
+          .eq('isVisible', true)
+          .range(from, to); // <- clave para evitar corte en 1000
 
+        if (error) {
+          console.error('Error fetching products batch', { from, to, error });
+          throw error;
+        }
+
+        if (!data || data.length === 0) break;
+
+        all.push(...data);
+
+        // si recibimos menos que el batch, ya no hay más
+        if (data.length < BATCH) break;
+
+        // siguiente batch
+        from += BATCH;
+      }
+
+      setAllProducts(all || []);
+    } catch (err) {
+      console.error('Products fetch error', err);
+      setAllProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // trending (se mantiene independiente)
   const fetchTrending = async () => {
-    const { data } = await supabase
-      .from('products')
-      .select('*')
-      .eq('hasstock', true)
-      .eq('isVisible', true) // ✅ NUEVO
-      .eq('isTrending', true)
-      .limit(10);
+    try {
+      const { data } = await supabase
+        .from('products')
+        .select('*')
+        .eq('hasstock', true)
+        .eq('isVisible', true)
+        .eq('isTrending', true)
+        .limit(10);
 
-    setTrending(data || []);
+      setTrending(data || []);
+    } catch (e) {
+      console.error('Error fetching trending', e);
+      setTrending([]);
+    }
   };
 
   useEffect(() => {
     fetchAll();
     fetchTrending();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // categorías únicas derivadas de allProducts (para rellenar select / chips)

@@ -43,17 +43,37 @@ export default function AdminProducts() {
     }
   }, []);
 
+  // fetchAll con batching usando .range() para evitar límite de 1000 filas por petición
   const fetchAll = async () => {
     setLoading(true);
     setError(null);
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('id,title,category,price0,price1,price2,img,stockPerSize,isTrending,hasstock,isVisible')
-        .order('id', { ascending: false });
+      const BATCH = 1000; // tamaño del batch (ajustable)
+      let from = 0;
+      let accumulated = [];
 
-      if (error) throw error;
-      setAll(data || []);
+      while (true) {
+        const to = from + BATCH - 1;
+        const { data, error: batchErr } = await supabase
+          .from('products')
+          .select('id,title,category,price0,price1,price2,img,stockPerSize,isTrending,hasstock,isVisible')
+          .order('id', { ascending: false })
+          .range(from, to);
+
+        if (batchErr) {
+          console.error('Error fetching products batch', { from, to, batchErr });
+          throw batchErr;
+        }
+
+        if (!data || data.length === 0) break;
+
+        accumulated.push(...data);
+
+        if (data.length < BATCH) break; // no hay más
+        from += BATCH;
+      }
+
+      setAll(accumulated || []);
     } catch (err) {
       console.error(err);
       setError(err.message || 'Error fetching products');
@@ -102,6 +122,11 @@ export default function AdminProducts() {
     if (status && status !== 'all') list = list.filter(p => p.computedStatus === status);
     return list;
   }, [withStatus, search, category, status]);
+
+  // si cambian filtros, resetear página a 1
+  useEffect(() => {
+    setPage(1);
+  }, [search, category, status]);
 
   const total = filtered.length;
   const maxPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -195,7 +220,7 @@ export default function AdminProducts() {
                 {pageItems.map(p => (
                   <tr key={p.id}>
                     <td>
-                      <img className="ap-thumb" src={(p.img && p.img[0]) || (Array.isArray(p.img) ? p.img[0] : p.img) || '/placeholder.jpg'} alt={p.title} />
+                      <img className="ap-thumb" src={(Array.isArray(p.img) ? p.img[0] : p.img) || '/placeholder.jpg'} alt={p.title} />
                     </td>
                     <td>
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -206,7 +231,7 @@ export default function AdminProducts() {
                     <td>
                       <div>
                         <div style={{ fontWeight: 700 }}>${Number(p.price0 ?? p.price ?? 0).toFixed(2)}</div>
-                        <small style={{ color: '#7a5860' }}>hasta {Math.round(p.price0 / 100)} pts</small>
+                        <small style={{ color: '#7a5860' }}>hasta {Math.round((p.price0 ?? 0) / 100)} pts</small>
                       </div>
                     </td>
                     <td>
@@ -251,7 +276,7 @@ export default function AdminProducts() {
 
         <div className="ap-pagination">
           <div style={{ flex: 1 }}>
-            <small>Mostrando {((page - 1) * PAGE_SIZE) + 1} – {Math.min(page * PAGE_SIZE, total)} de {total}</small>
+            <small>Mostrando {total === 0 ? 0 : ((page - 1) * PAGE_SIZE) + 1} – {Math.min(page * PAGE_SIZE, total)} de {total}</small>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>Anterior</button>

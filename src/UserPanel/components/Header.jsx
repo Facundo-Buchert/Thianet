@@ -65,7 +65,7 @@ export const Header = () => {
           <div className="cart">
             <Link to="/carrito">
               <span className="material-symbols-outlined">shopping_bag</span>
-              {totalQty > 0 && <span className="badge">{totalQty}</span>}
+              {totalQty > 0 && <span className="headerBadge">{totalQty}</span>}
             </Link>
           </div>
         </div>

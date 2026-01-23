@@ -107,13 +107,13 @@ export default function MerchDetail() {
             />
           )}
 
-          <div className="thumbs" role="tablist" aria-label="Miniaturas">
+          <div className="merchDetailThumbs" role="tablist" aria-label="Miniaturas">
             {isLoading ? (
               // 4 thumbs skeleton
-              [0,1,2,3].map(i => <div className="thumb skeleton-box" key={i} />)
+              [0,1,2,3].map(i => <div className="merchDetailThumb skeleton-box" key={i} />)
             ) : images.length === 0 ? (
               <button
-                className="thumb active"
+                className="merchDetailThumb active"
                 style={{ backgroundImage: `url(${placeholder})` }}
                 aria-selected="true"
                 onClick={() => setSelectedImg(0)}

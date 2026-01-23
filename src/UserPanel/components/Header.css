@@ -84,12 +84,12 @@
   color: #000;
 }
 
-.badge{
+.headerBadge{
   position: absolute;
   top: 0px;
   right: -25px;
-  background: #e31e25d8 !important;
-  color: #fff !important;
+  background: #e31e25d8;
+  color: #fff;
   font-size: 10px;
   border-radius: 50%;
   display: flex;
