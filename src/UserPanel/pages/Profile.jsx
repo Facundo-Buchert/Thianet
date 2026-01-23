@@ -1,5 +1,4 @@
 // src/UserPanel/pages/Profile.jsx
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import supabase from "../../../utils/supabase";
@@ -14,12 +13,16 @@ const BENEFITS = [
 
 export const Profile = () => {
   const navigate = useNavigate();
+
+  // estados
   const [user, setUser] = useState(null);
   const [msg, setMsg] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true); // <- skeleton control
 
   useEffect(() => {
     const load = async () => {
+      setLoading(true);
       try {
         const { data: { user: authUser }, error: authErr } = await supabase.auth.getUser();
         if (authErr) {
@@ -53,10 +56,10 @@ export const Profile = () => {
         profile.points = Number(profile.points ?? 0);
         setUser(profile);
 
-        // calcular admin según email del perfil
+        // determinar admin por email (ajustalo si tenés otro criterio)
         setIsAdmin(Boolean(profile.mail && profile.mail.toLowerCase() === "ventasthiagol20@gmail.com"));
 
-        // mantener en localStorage el objeto seguro si querés (clave consistente)
+        // mantener en localStorage (opcional)
         localStorage.setItem(
           "thianet_user",
           JSON.stringify({
@@ -70,16 +73,16 @@ export const Profile = () => {
       } catch (e) {
         console.error("Unexpected error loading profile:", e);
         navigate("/profile/login");
+      } finally {
+        setLoading(false);
       }
     };
     load();
     // eslint-disable-next-line
   }, []);
 
-  if (!user) return null;
-
-  const historypoints = Number(user.historypoints || 0);
-  const points = Number(user.points || 0);
+  const historypoints = Number(user?.historypoints || 0);
+  const points = Number(user?.points || 0);
 
   // siguiente meta: múltiplo de 250 (ej: 500, 750, 1000...)
   const nextLevel = Math.max(250, Math.ceil((historypoints + 1) / 250) * 250);
@@ -105,10 +108,9 @@ export const Profile = () => {
       return;
     }
 
-    // simular canje: restar puntos y persistir en localStorage (clave consistente)
+    // simular canje
     const updated = { ...user, points: points - benefit.cost };
     setUser(updated);
-
     localStorage.setItem("thianet_user", JSON.stringify({
       id: updated.id,
       name: updated.name,
@@ -121,6 +123,76 @@ export const Profile = () => {
     setTimeout(() => setMsg(null), 3000);
   };
 
+  // ---------- SKELETON mientras carga ----------
+  if (loading) {
+    return (
+      <div className="profile-page">
+        <div className="profile-card">
+          <header className="profile-top">
+            <div style={{ flex: 1 }}>
+              <div className="skeleton-line title" style={{ width: 220, height: 26, marginBottom: 8 }} />
+              <div className="skeleton-line" style={{ width: 160, height: 14 }} />
+            </div>
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <div className="skeleton-button" style={{ width: 120, height: 36 }} />
+              <div className="skeleton-button" style={{ width: 120, height: 36 }} />
+            </div>
+          </header>
+
+          <section className="profile-stats">
+            <div className="points-box">
+              <div className="skeleton-line" style={{ width: 64, height: 40, borderRadius: 8 }} />
+              <div className="skeleton-line" style={{ width: 120, height: 12, marginTop: 8 }} />
+            </div>
+
+            <div className="progress-box">
+              <div className="progress-top">
+                <div className="skeleton-line" style={{ width: 140, height: 12 }} />
+                <div className="skeleton-line" style={{ width: 36, height: 18 }} />
+              </div>
+              <div style={{ height: 12, background: '#f0f0f0', borderRadius: 8, marginTop: 8 }}>
+                <div style={{ width: '30%', height: '100%', background: 'linear-gradient(90deg,#e5e5e5,#f7f7f7)', borderRadius: 8 }} />
+              </div>
+              <div style={{ marginTop: 8 }}>
+                <div className="skeleton-line" style={{ width: 200, height: 12 }} />
+              </div>
+            </div>
+          </section>
+
+          <section className="profile-benefits">
+            <div className="benefits-header">
+              <div className="skeleton-line" style={{ width: 280, height: 20 }} />
+            </div>
+
+            <div className="benefits-grid" style={{ marginTop: 12 }}>
+              {[1,2,3,4].map(i => (
+                <article key={i} className="benefit-card skeleton" style={{ padding: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div className="skeleton-line" style={{ width: 120, height: 18 }} />
+                    <div className="skeleton-line" style={{ width: 64, height: 18 }} />
+                  </div>
+                  <div style={{ height: 8 }} />
+                  <div className="skeleton-line" style={{ width: '80%', height: 12 }} />
+                  <div style={{ height: 12 }} />
+                  <div className="skeleton-button" style={{ width: 100, height: 36 }} />
+                </article>
+              ))}
+            </div>
+          </section>
+        </div>
+      </div>
+    );
+  }
+
+  // si no hay user (por seguridad) redirigimos
+  if (!user) {
+    // fallback: redirigir al login
+    navigate("/profile/login");
+    return null;
+  }
+
+  // ---------- RENDER normal ----------
   return (
     <div className="profile-page">
       <div className="profile-card">
@@ -170,7 +242,6 @@ export const Profile = () => {
               //COREGIR ACA CUANDO ESTEN LOS BENEFICIOS REALES
               //const available = points >= b.cost;
               const available = false;
-              
               return (
                 <article key={b.id} className={`benefit-card ${available ? "available" : "locked"}`}>
                   <div className="benefit-top">
