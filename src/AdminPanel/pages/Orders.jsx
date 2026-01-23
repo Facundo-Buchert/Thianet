@@ -229,7 +229,7 @@ export default function Orders() {
                               <div><strong>Dirección</strong></div>
                               <div>{o.address || o.adress || '—'}</div>
                               <div style={{ marginTop: 8 }}><strong>Notas</strong></div>
-                              <div>{o.notes || o.comment || '—'}</div>
+                              <div style={{ whiteSpace: 'pre-line' }}>{o.notes || o.comment || '—'}</div>
                             </div>
                           </div>
                         </td>
