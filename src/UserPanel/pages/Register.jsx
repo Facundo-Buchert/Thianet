@@ -176,15 +176,6 @@ export const Register = () => {
             <Link to="/profile/login">Iniciar sesión</Link>
           </div>
         </div>
-
-        <div className="register-image">
-          <img src="/register-shirt.png" alt="Producto" />
-          <div className="points-box">
-            <span className="icon">🏷️</span>
-            <h4>Suma Puntos</h4>
-            <p>Con cada compra acumulás puntos que podés canjear por descuentos exclusivos.</p>
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -77,7 +77,7 @@ export const ProductsProvider = ({ children }) => {
         .eq('hasstock', true)
         .eq('isVisible', true)
         .eq('isTrending', true)
-        .limit(10);
+        .limit(8);
 
       setTrending(data || []);
     } catch (e) {

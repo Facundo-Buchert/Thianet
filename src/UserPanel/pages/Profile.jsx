@@ -1,5 +1,5 @@
 // src/UserPanel/pages/Profile.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import supabase from "../../../utils/supabase";
 import "./Profile.css";
@@ -14,28 +14,26 @@ const BENEFITS = [
 export const Profile = () => {
   const navigate = useNavigate();
 
-  // estados
   const [user, setUser] = useState(null);
   const [msg, setMsg] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true); // <- skeleton control
+  const [loading, setLoading] = useState(true);
 
+  // Load current authenticated user + profile
   useEffect(() => {
+    let mounted = true;
     const load = async () => {
       setLoading(true);
       try {
-        const { data: { user: authUser }, error: authErr } = await supabase.auth.getUser();
-        if (authErr) {
-          console.error("Auth error:", authErr);
-          navigate("/profile/login");
-          return;
-        }
+        const { data: authData, error: authErr } = await supabase.auth.getUser();
+        if (authErr) throw authErr;
+        const authUser = authData?.user;
         if (!authUser) {
-          navigate("/profile/login");
+          // no auth -> redirect to login
+          if (mounted) navigate("/profile/login");
           return;
         }
 
-        // traer perfil desde DB
         const { data: profile, error: profileErr } = await supabase
           .from("users")
           .select("*")
@@ -44,49 +42,58 @@ export const Profile = () => {
 
         if (profileErr) {
           console.error("Profile fetch error:", profileErr);
-          navigate("/profile/login");
-          return;
-        }
-        if (!profile) {
-          console.warn("No profile found for auth user:", authUser.id);
-          navigate("/profile/login");
+          if (mounted) navigate("/profile/login");
           return;
         }
 
+        // normalize fields
         profile.points = Number(profile.points ?? 0);
-        setUser(profile);
+        profile.historypoints = Number(profile.historypoints ?? 0);
 
-        // determinar admin por email (ajustalo si tenés otro criterio)
-        setIsAdmin(Boolean(profile.mail && profile.mail.toLowerCase() === "ventasthiagol20@gmail.com"));
-
-        // mantener en localStorage (opcional)
-        localStorage.setItem(
-          "thianet_user",
-          JSON.stringify({
-            id: profile.id,
-            name: profile.name,
-            mail: profile.mail,
-            points: profile.points,
-            historypoints: profile.historypoints
-          })
-        );
+        if (mounted) {
+          setUser(profile);
+          setIsAdmin(Boolean(profile.mail && profile.mail.toLowerCase() === "ventasthiagol20@gmail.com"));
+          // optional local cache
+          try {
+            localStorage.setItem(
+              "thianet_user",
+              JSON.stringify({
+                id: profile.id,
+                name: profile.name,
+                mail: profile.mail,
+                points: profile.points,
+                historypoints: profile.historypoints,
+              })
+            );
+          } catch (_) {}
+        }
       } catch (e) {
         console.error("Unexpected error loading profile:", e);
-        navigate("/profile/login");
+        if (mounted) navigate("/profile/login");
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
+
     load();
+    return () => { mounted = false; };
     // eslint-disable-next-line
   }, []);
 
-  const historypoints = Number(user?.historypoints || 0);
-  const points = Number(user?.points || 0);
+  // redirect if not authenticated after loading
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/profile/login");
+    }
+  }, [loading, user, navigate]);
 
-  // siguiente meta: múltiplo de 250 (ej: 500, 750, 1000...)
-  const nextLevel = Math.max(250, Math.ceil((historypoints + 1) / 250) * 250);
-  const progress = Math.min(100, Math.round((historypoints / nextLevel) * 100));
+  // derived point values (safe when user is null)
+  const historypoints = useMemo(() => Number(user?.historypoints ?? 0), [user]);
+  const points = useMemo(() => Number(user?.points ?? 0), [user]);
+
+  // next multiple of 250 strictly greater than historypoints, minimum 250
+  const nextLevel = useMemo(() => Math.max(250, Math.ceil((historypoints + 1) / 250) * 250), [historypoints]);
+  const progress = useMemo(() => Math.min(100, Math.round((historypoints / nextLevel) * 100)), [historypoints, nextLevel]);
   const remaining = Math.max(0, nextLevel - historypoints);
 
   const handleLogout = async () => {
@@ -102,38 +109,40 @@ export const Profile = () => {
   const handleEdit = () => navigate("/profile/edit");
 
   const handleRedeem = (benefit) => {
+    if (!user) return;
     if (points < benefit.cost) {
       setMsg({ type: "error", text: `Te faltan ${benefit.cost - points} pts para ${benefit.title}.` });
-      setTimeout(() => setMsg(null), 3000);
+      setTimeout(() => setMsg(null), 3500);
       return;
     }
 
-    // simular canje
+    // Simulación de canje (debería persistirse en backend)
     const updated = { ...user, points: points - benefit.cost };
     setUser(updated);
-    localStorage.setItem("thianet_user", JSON.stringify({
-      id: updated.id,
-      name: updated.name,
-      mail: updated.mail,
-      points: updated.points,
-      historypoints: updated.historypoints
-    }));
+    try {
+      localStorage.setItem("thianet_user", JSON.stringify({
+        id: updated.id,
+        name: updated.name,
+        mail: updated.mail,
+        points: updated.points,
+        historypoints: updated.historypoints
+      }));
+    } catch (_) {}
 
     setMsg({ type: "success", text: `Canjeado: ${benefit.title}. -${benefit.cost} pts` });
-    setTimeout(() => setMsg(null), 3000);
+    setTimeout(() => setMsg(null), 3500);
   };
 
-  // ---------- SKELETON mientras carga ----------
+  // SKELETON mientras carga
   if (loading) {
     return (
       <div className="profile-page">
-        <div className="profile-card">
+        <div className="profile-card skeleton-card" aria-busy="true" aria-live="polite">
           <header className="profile-top">
             <div style={{ flex: 1 }}>
               <div className="skeleton-line title" style={{ width: 220, height: 26, marginBottom: 8 }} />
               <div className="skeleton-line" style={{ width: 160, height: 14 }} />
             </div>
-
             <div style={{ display: 'flex', gap: 8 }}>
               <div className="skeleton-button" style={{ width: 120, height: 36 }} />
               <div className="skeleton-button" style={{ width: 120, height: 36 }} />
@@ -185,42 +194,39 @@ export const Profile = () => {
     );
   }
 
-  // si no hay user (por seguridad) redirigimos
-  if (!user) {
-    // fallback: redirigir al login
-    navigate("/profile/login");
-    return null;
-  }
+  if (!user) return null; // useEffect already redirige
 
-  // ---------- RENDER normal ----------
+  // RENDER normal
   return (
     <div className="profile-page">
-      <div className="profile-card">
+      <div className="profile-card" role="region" aria-label="Perfil de usuario">
         <header className="profile-top">
           <div>
             <h1 className="profile-name">Hola, {user.name}</h1>
             <p className="profile-mail">{user.mail}</p>
           </div>
 
-          <div className="profile-actions">
-            <button className="btn-admin" onClick={() => navigate("/admin")} style={{ display: isAdmin ? 'block' : 'none' }}>Panel Admin</button>
-            <button className="btn-ghost" onClick={handleEdit}>Editar perfil</button>
-            <button className="btn-primary" onClick={handleLogout}>Cerrar sesión</button>
+          <div className="user-profile-actions" role="toolbar" aria-label="Acciones de perfil">
+            {isAdmin && (
+              <button className="btn-admin" onClick={() => navigate("/admin")} aria-label="Ir al panel de administrador">Panel Admin</button>
+            )}
+            <button className="btn-ghost" onClick={handleEdit} aria-label="Editar perfil">Editar perfil</button>
+            <button className="btn-primary" onClick={handleLogout} aria-label="Cerrar sesión">Cerrar sesión</button>
           </div>
         </header>
 
         <section className="profile-stats">
-          <div className="points-box">
-            <div className="points-number">{points}</div>
+          <div className="points-box" aria-live="polite">
+            <div className="points-number" aria-hidden="false">{points}</div>
             <div className="points-label">Puntos disponibles</div>
           </div>
 
-          <div className="progress-box">
+          <div className="progress-box" aria-label="Progreso de puntos">
             <div className="progress-top">
               <span>Progreso al siguiente nivel</span>
               <strong>{progress}%</strong>
             </div>
-            <div className="progress-bar">
+            <div className="progress-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
               <div className="progress-fill" style={{ width: `${progress}%` }} />
             </div>
             <div className="progress-meta">
@@ -229,9 +235,9 @@ export const Profile = () => {
           </div>
         </section>
 
-        <section className="profile-benefits">
+        <section className="profile-benefits" aria-label="Beneficios disponibles">
           <div className="benefits-header">
-            <h2>Beneficios disponibles (Muy pronto!)</h2>
+            <h2>Beneficios disponibles</h2>
             <div className="benefits-controls">
               <span className="chip">Disponibles para mí</span>
             </div>
@@ -243,7 +249,7 @@ export const Profile = () => {
               //const available = points >= b.cost;
               const available = false;
               return (
-                <article key={b.id} className={`benefit-card ${available ? "available" : "locked"}`}>
+                <article key={b.id} className={`benefit-card ${available ? "available" : "locked"}`} aria-hidden={false}>
                   <div className="benefit-top">
                     <div className="benefit-title">{b.title}</div>
                     <div className="benefit-cost">{b.cost} pts</div>
@@ -252,9 +258,9 @@ export const Profile = () => {
 
                   <div className="benefit-footer">
                     {available ? (
-                      <button className="btn-primary btn-small" onClick={() => handleRedeem(b)}>Canjear</button>
+                      <button className="btn-primary btn-small" onClick={() => handleRedeem(b)} aria-label={`Canjear ${b.title}`}>Canjear</button>
                     ) : (
-                      <button className="btn-disabled" disabled>Faltan {b.cost - points}</button>
+                      <button className="btn-disabled" disabled aria-disabled="true">Faltan {b.cost - points}</button>
                     )}
                   </div>
                 </article>
@@ -264,7 +270,7 @@ export const Profile = () => {
         </section>
 
         {msg && (
-          <div className={`profile-msg ${msg.type === "error" ? "err" : "ok"}`}>
+          <div className={`profile-msg ${msg.type === "error" ? "err" : "ok"}`} role="status" aria-live="polite">
             {msg.text}
           </div>
         )}

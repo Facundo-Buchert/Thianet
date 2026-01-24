@@ -1,11 +1,12 @@
+// src/UserPanel/pages/MerchDetail.jsx
 import { useParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import supabase from '../../../utils/supabase';
 import { useCart } from '../../context/CartContext';
 import SizeGuideModal from '../components/SizeGuideModal';
 import './MerchDetail.css';
 
-const placeholder = 'https://via.placeholder.com/800x1000?text=Sin+imagen';
+const PLACEHOLDER = 'https://via.placeholder.com/800x1000?text=Sin+imagen';
 
 export default function MerchDetail() {
   const { id } = useParams();
@@ -17,13 +18,19 @@ export default function MerchDetail() {
   const { addItem } = useCart();
 
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+  const mainImgRef = useRef(null);
+  const thumbsRef = useRef(null);
 
+  // Fetch product
   useEffect(() => {
     setProduct(null);
     setSelectedImg(0);
     setSelectedSize(null);
     setQty(1);
 
+    if (!id) return;
+
+    let mounted = true;
     const fetchProduct = async () => {
       setLoading(true);
       try {
@@ -35,29 +42,30 @@ export default function MerchDetail() {
 
         if (error) {
           console.error('Error fetching product:', error);
-          setProduct(null);
+          if (mounted) setProduct(null);
         } else {
-          if (!Array.isArray(data.img)) data.img = Array.isArray(data.img) ? data.img : [];
-          if (!data.stockPerSize || typeof data.stockPerSize !== 'object') data.stockPerSize = {};
-          if (!Array.isArray(data.characteristics)) data.characteristics = [];
-          setProduct(data);
+          // ensure shapes
+          data.img = Array.isArray(data.img) ? data.img : [];
+          data.stockPerSize = typeof data.stockPerSize === 'object' && data.stockPerSize !== null ? data.stockPerSize : {};
+          data.characteristics = Array.isArray(data.characteristics) ? data.characteristics : [];
+          if (mounted) setProduct(data);
         }
       } catch (e) {
         console.error('Exception fetching product:', e);
-        setProduct(null);
+        if (mounted) setProduct(null);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
-    if (id) fetchProduct();
+    fetchProduct();
+    return () => { mounted = false; };
   }, [id]);
 
-  // Mostrar skeleton cuando carga o no hay producto aún
   const isLoading = loading || !product;
 
   const images = Array.isArray(product?.img) ? product.img : [];
-  const mainImage = !isLoading ? (images[selectedImg] ?? placeholder) : null;
+  const mainImage = !isLoading ? (images[selectedImg] ?? PLACEHOLDER) : PLACEHOLDER;
 
   const stockObj = product?.stockPerSize || {};
   const sizes = Object.entries(stockObj).map(([k, v]) => [k, Number(v)]);
@@ -66,22 +74,24 @@ export default function MerchDetail() {
   const openModal = (e) => { e?.preventDefault?.(); setIsSizeGuideOpen(true); };
   const closeModal = () => setIsSizeGuideOpen(false);
 
+  // quantity control with bounds
   const handleQtyChange = (next) => {
     if (!selectedSize) return setQty(1);
     const max = Math.max(1, maxForSelected);
-    if (next < 1) return setQty(1);
-    if (next > max) return setQty(max);
-    setQty(next);
+    if (Number.isNaN(next)) return;
+    const val = Math.max(1, Math.min(max, Number(next)));
+    setQty(val);
   };
 
   const addToCart = () => {
     if (isLoading) return;
     if (!selectedSize) return;
     const available = Number(product.stockPerSize?.[selectedSize] ?? 0);
+    if (available <= 0) return;
     addItem({
       productId: product.id,
       title: product.title,
-      img: product.img?.[0],
+      img: product.img?.[0] ?? PLACEHOLDER,
       size: selectedSize,
       qty,
       price: Number(product.price ?? 0),
@@ -91,30 +101,45 @@ export default function MerchDetail() {
     });
   };
 
+  // scroll main image into view when selectedImg changes
+  useEffect(() => {
+    const el = mainImgRef.current;
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [selectedImg]);
+
   return (
-    <main className="merch-detail">
+    <main className="merch-detail" role="main">
       <div className="detail-grid">
         {/* LEFT: galería */}
-        <div className="images">
+        <div className="images" aria-hidden={isLoading ? "true" : "false"}>
           {isLoading ? (
             <div className="main-image skeleton-box" />
           ) : (
-            <div
-              className="main-image"
-              role="img"
-              aria-label={product.title}
-              style={{ backgroundImage: `url(${mainImage})` }}
-            />
+            <figure className="main-image" ref={mainImgRef}>
+              {/* preferimos eager para LCP en la imagen principal */}
+              <img
+                src={mainImage}
+                alt={product.title ?? "Producto"}
+                loading={selectedImg === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+                width="800"
+                height="1000"
+              />
+            </figure>
           )}
 
-          <div className="merchDetailThumbs" role="tablist" aria-label="Miniaturas">
+          <div
+            className="merchDetailThumbs"
+            role="tablist"
+            aria-label="Miniaturas"
+            ref={thumbsRef}
+          >
             {isLoading ? (
-              // 4 thumbs skeleton
               [0,1,2,3].map(i => <div className="merchDetailThumb skeleton-box" key={i} />)
             ) : images.length === 0 ? (
               <button
                 className="merchDetailThumb active"
-                style={{ backgroundImage: `url(${placeholder})` }}
+                style={{ backgroundImage: `url(${PLACEHOLDER})` }}
                 aria-selected="true"
                 onClick={() => setSelectedImg(0)}
               />
@@ -122,13 +147,10 @@ export default function MerchDetail() {
               images.map((img, i) => (
                 <button
                   key={i}
-                  className={`thumb ${i === selectedImg ? 'active' : ''}`}
-                  onClick={() => {
-                    setSelectedImg(i);
-                    const el = document.querySelector('.main-image');
-                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }}
+                  className={`merchDetailThumb ${i === selectedImg ? 'active' : ''}`}
+                  onClick={() => setSelectedImg(i)}
                   aria-selected={i === selectedImg}
+                  aria-label={`Ver imagen ${i + 1}`}
                   style={{ backgroundImage: `url(${img})` }}
                 />
               ))
@@ -137,7 +159,7 @@ export default function MerchDetail() {
         </div>
 
         {/* RIGHT: info */}
-        <div className={`info ${isLoading ? 'skeleton' : ''}`}>
+        <div className={`info ${isLoading ? 'skeleton' : ''}`} aria-busy={isLoading}>
           <div className="info-top">
             {isLoading ? (
               <div className="skeleton-line title" style={{ width: '60%', height: 28 }} />
@@ -145,7 +167,7 @@ export default function MerchDetail() {
               <h1 className="title">{product.title}</h1>
             )}
 
-            <div className="meta">
+            <div className="meta" aria-hidden={isLoading}>
               {isLoading ? (
                 <>
                   <div className="skeleton-line" style={{ width: 80, height: 18 }} />
@@ -153,13 +175,13 @@ export default function MerchDetail() {
                 </>
               ) : (
                 <>
-                  <div className="price">
+                  <div className="price" aria-label="Precio anterior">
+                    <span className="currency">$</span>
+                    <span className="amount">{product.price0 ?? ''}</span>
+                  </div>
+                  <div className="price0" aria-label="Precio actual">
                     <span className="currency">$</span>
                     <span className="amount">{product.price}</span>
-                  </div>
-                  <div className="price0">
-                    <span className="currency">$</span>
-                    <span className="amount">{product.price0}</span>
                   </div>
                 </>
               )}
@@ -191,7 +213,7 @@ export default function MerchDetail() {
               <SizeGuideModal isOpen={isSizeGuideOpen} onClose={closeModal} />
             </div>
 
-            <div className="size-grid">
+            <div className="size-grid" role="radiogroup" aria-label="Tallas disponibles">
               {isLoading ? (
                 [0,1,2,3].map(i => <div key={i} className="size-btn skeleton-box" style={{ height: 44, width: 80 }} />)
               ) : sizes.length === 0 ? (
@@ -206,8 +228,10 @@ export default function MerchDetail() {
                       onClick={() => !disabled && setSelectedSize(size)}
                       disabled={disabled || isLoading}
                       aria-pressed={selectedSize === size}
+                      aria-label={`${size} ${disabled ? 'agotado' : `${stock} disponibles`}`}
+                      type="button"
                     >
-                      {size}
+                      <span className="size-label">{size}</span>
                       {disabled && <span className="sr-only"> (Agotado)</span>}
                     </button>
                   );
@@ -216,11 +240,11 @@ export default function MerchDetail() {
             </div>
 
             {selectedSize && !isLoading && (
-              <p className="stock-note">
+              <p className="stock-note" aria-live="polite">
                 {maxForSelected > 0 ? (
                   maxForSelected >= 3 ? (
                     maxForSelected > 10 ? (
-                      <span></span>
+                      <span>Stock suficiente</span>
                     ) : (
                       <span>Quedan {maxForSelected} unidades en talla {selectedSize}.</span>
                     )
@@ -237,7 +261,12 @@ export default function MerchDetail() {
           {/* cantidad + CTA */}
           <div className="actions-row">
             <div className="qty-control" aria-label="Cantidad">
-              <button onClick={() => handleQtyChange(qty - 1)} aria-label="Disminuir cantidad" disabled={isLoading}>−</button>
+              <button
+                onClick={() => handleQtyChange(qty - 1)}
+                aria-label="Disminuir cantidad"
+                disabled={isLoading}
+                type="button"
+              >−</button>
               <input
                 type="number"
                 min="1"
@@ -246,7 +275,12 @@ export default function MerchDetail() {
                 aria-label="Cantidad"
                 disabled={isLoading}
               />
-              <button onClick={() => handleQtyChange(qty + 1)} aria-label="Aumentar cantidad" disabled={isLoading}>+</button>
+              <button
+                onClick={() => handleQtyChange(qty + 1)}
+                aria-label="Aumentar cantidad"
+                disabled={isLoading}
+                type="button"
+              >+</button>
             </div>
 
             <button
@@ -255,7 +289,7 @@ export default function MerchDetail() {
               disabled={isLoading || !selectedSize || maxForSelected <= 0}
               aria-disabled={isLoading || !selectedSize || maxForSelected <= 0}
             >
-              <span className="cart-icon">🛒</span>
+              <span className="cart-icon" aria-hidden="true">🛒</span>
               {isLoading ? 'Cargando...' : 'Añadir al carrito'}
             </button>
           </div>
@@ -280,8 +314,6 @@ export default function MerchDetail() {
                 )
               )}
             </details>
-
-            <br />
 
             <details>
               <summary>Envíos y devoluciones</summary>

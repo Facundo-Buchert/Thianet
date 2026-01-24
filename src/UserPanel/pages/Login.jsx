@@ -151,19 +151,6 @@ export const Login = () => {
             <Link to="/profile/register">Crear cuenta</Link>
           </div>
         </div>
-
-        {/* LADO DERECHO */}
-        <div className="login-image">
-          <img src="/login-image.jpg" alt="Producto" />
-
-          <div className="points-box">
-            <span className="icon">🏷️</span>
-            <h4>Suma Puntos</h4>
-            <p>
-              Cada compra suma puntos que podés canjear por descuentos exclusivos.
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -1,88 +1,136 @@
+/* src/components/SizeGuideModal.css */
+/* Responsive, accesible y con manejo de scroll interno */
+
+:root {
+  --accent: #e30613;
+  --bg-overlay: rgba(0,0,0,0.55);
+  --radius: 10px;
+  --gap: 20px;
+  --max-width: 960px;
+  --text-muted: #666;
+}
+
+/* overlay */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--bg-overlay);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  padding: 20px;
 }
 
+/* container */
 .modal-container {
   background: #fff;
-  width: 900px;
-  max-width: 95%;
-  border-radius: 8px;
+  width: 100%;
+  max-width: var(--max-width);
+  border-radius: var(--radius);
   overflow: hidden;
-  font-family: Arial, sans-serif;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 60px);
 }
 
+/* header */
 .modal-header {
   display: flex;
   justify-content: space-between;
-  padding: 20px;
+  align-items: start;
+  padding: 18px 18px;
   border-bottom: 1px solid #eee;
+  gap: 12px;
 }
 
 .modal-header h2 {
   margin: 0;
+  font-size: 1.25rem;
 }
 
 .subtitle {
   font-size: 13px;
-  color: #777;
+  color: var(--text-muted);
+  margin: 6px 0 0 0;
 }
 
 .close-btn {
-  font-size: 26px;
+  font-size: 22px;
   background: none;
   border: none;
   cursor: pointer;
+  line-height: 1;
+  padding: 6px 8px;
+  border-radius: 6px;
 }
 
+.close-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(227,30,36,0.12);
+}
+
+/* content area: scrollable */
 .modal-content {
-  display: flex;
-  padding: 20px;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--gap);
+  padding: 18px;
+  overflow: auto;
 }
 
+/* split panels (desktop) */
 .left-panel,
 .right-panel {
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
+/* tip */
 .tip-box {
   background: #fdecec;
   border: 1px solid #f5c2c2;
-  padding: 15px;
-  border-radius: 6px;
-  margin-bottom: 20px;
+  padding: 12px;
+  border-radius: 8px;
   font-size: 14px;
 }
 
+/* diagram */
 .shirt-diagram {
   text-align: center;
 }
 
 .shirt-diagram img {
-  max-width: 100%;
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  border-radius: 6px;
 }
 
 .legend {
   margin-top: 10px;
   font-size: 13px;
   display: flex;
-  justify-content: space-around;
+  justify-content: center;
+  gap: 18px;
+  color: var(--text-muted);
 }
 
-.right-panel h3 {
-  margin-bottom: 10px;
+/* table wrapper para scroll horizontal en móviles */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
+  min-width: 360px;
 }
 
 th, td {
@@ -93,35 +141,75 @@ th, td {
 
 th {
   background: #f9f9f9;
+  font-weight: 700;
 }
 
+/* note */
 .note {
   font-size: 12px;
-  color: #666;
-  margin-top: 10px;
+  color: var(--text-muted);
+  margin-top: 8px;
 }
 
+/* footer */
 .modal-footer {
-  padding: 15px 20px;
+  padding: 12px 18px;
   display: flex;
   justify-content: flex-end;
   border-top: 1px solid #eee;
+  gap: 8px;
 }
 
 .confirm-btn {
-  background: #e30613;
+  background: var(--accent);
   color: #fff;
   border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
+  padding: 10px 16px;
+  border-radius: 8px;
   cursor: pointer;
-  font-weight: bold;
+  font-weight: 700;
 }
 
-.confirm-btn:hover {
-  background: #c10510;
+.confirm-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(227,30,36,0.12);
 }
 
-.shirt-diagram img {
-    max-width: 300px;
+/* responsive layout: side-by-side on larger screens */
+@media (min-width: 768px) {
+  .modal-content {
+    grid-template-columns: 1fr 1fr;
+    padding: 22px;
+  }
+
+  .shirt-diagram img {
+    max-width: 40%;
+  }
+}
+
+/* small screens adjustments */
+@media (max-width: 420px) {
+  .modal-header {
+    padding: 14px;
+  }
+
+  .modal-content {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .confirm-btn {
+    width: 100%;
+  }
+
+  .modal-footer {
+    padding: 12px 14px;
+  }
+}
+
+/* focus styles */
+button:focus, a:focus, input:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(227,30,36,0.12);
+  border-radius: 6px;
 }

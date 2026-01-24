@@ -1,77 +1,128 @@
 /* src/UserPanel/components/MerchCard.css */
+/* Mobile-first, accesible, evita CLS usando aspect-ratio en .card-media */
 
-.products {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 24px;
+:root {
+  --card-border: #e6e6e6;
+  --accent: #e31e24;
+  --shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  --radius: 12px;
 }
 
+/* card wrapper */
 .card {
-  border: 1px solid #d1d1d1;
-  border-radius: 12px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #fff;
+  transition: transform 220ms ease, box-shadow 220ms ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Link ocupa todo el card para accesibilidad/teclado */
+.card-link {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Media: contenedor con aspect-ratio fijo para evitar CLS */
+.card-media {
+  width: 100%;
+  aspect-ratio: 4 / 5; /* ajustable: mantiene layout estable */
+  background: linear-gradient(180deg, #efefef, #ddd);
+  display: block;
   overflow: hidden;
 }
 
-.card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  transition: box-shadow 0.3s ease;
+/* imagen responsiva y cover */
+.card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 400ms ease;
 }
 
-.card-img {
-  height: 260px;
-  background: #ddd;
-  background-size: cover;
-  background-position: center;
-}
-
+/* cuerpo */
 .card-body {
-  padding: 16px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  flex: 1 1 auto;
 }
 
-.card-body h4 {
-  margin-bottom: 4px;
+/* título y meta */
+.card-title {
+  margin: 0 0 6px 0;
+  font-size: 1rem;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #111;
 }
 
-.card-body p {
-  font-size: 14px;
+.card-meta {
+  margin: 0;
+  font-size: 0.875rem;
   color: #666;
 }
 
+/* footer - precios */
 .card-footer {
-  margin-top: 16px;
-  display: flex;  
-  justify-content: flex-start ;
-  align-items: left;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 8px;
 }
 
-.card-footer span{
-  margin-right: 12px;
-  font-size: 18px;
-}
-
+/* precio original (tachado) */
 .Price {
-  font-weight: 200;
+  font-weight: 400;
   font-style: italic;
   text-decoration: line-through;
+  color: #777;
+  font-size: 0.95rem;
 }
 
+/* precio actual */
 .Price0 {
-  font-weight: 600;
-  color: #c50b11;
-
+  font-weight: 800;
+  color: var(--accent);
+  font-size: 1rem;
 }
 
-.btn-small {
-  background: #e31e24;
-  color: #fff;
-  border: none;
-  padding: 6px 12px;
-  font-size: 14px;
-  cursor: pointer;
-  border-radius: 5px;
+/* hover / focus */
+.card:hover,
+.card:focus-within {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow);
 }
 
-.btn-small:hover {
-  background: #c81b20;
+.card-link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(227, 30, 36, 0.12);
+  border-radius: 10px;
 }
 
+/* subtle zoom on image hover for desktop */
+@media (hover: hover) and (pointer: fine) {
+  .card:hover .card-media img {
+    transform: scale(1.04);
+  }
+}
+
+/* responsive: adapt font sizes and grid behaviour comes from parent */
+@media (min-width: 640px) {
+  .card-title { font-size: 1.05rem; }
+  .Price0 { font-size: 1.05rem; }
+}
+
+@media (min-width: 1024px) {
+  .card-media { aspect-ratio: 3 / 4; } /* más alto en desktop si preferís */
+  .card-title { font-size: 1.1rem; }
+}

@@ -219,7 +219,7 @@ export default function TermsAndConditions() {
         :root{
           --bg: #ffffff;
           --muted: #6b7280;
-          --accent: #0b74da;
+          --accent: #ec131e;
           --max-width: 980px;
         }
         .tc-root{

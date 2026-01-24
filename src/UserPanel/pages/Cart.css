@@ -1,56 +1,68 @@
-/* Cart page improved styles */
-.cart-page {
-  display: grid;
-  grid-template-columns: 1fr 380px;
-  gap: 32px;
-  padding: 32px;
-  min-height: calc(100vh - 80px);
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-  color: #222;
-  background: #f7f7f8;
+/* Cart.css - Responsive improvements (mobile-first) */
+
+:root{
+  --bg: #f7f7f8;
+  --card-bg: #fff;
+  --accent-1: #d90429;
+  --accent-2: #ef233c;
+  --muted-border: rgba(0,0,0,0.04);
+  --muted: #e9e9e9;
+  --text: #222;
+  --shadow: 0 8px 20px rgba(15,10,10,0.03);
+  --radius: 12px;
+  --gap: 20px;
+  --summary-width: 380px; /* default desktop width */
 }
 
-.cart-page.empty {
-  padding: 64px;
-  text-align: center;
-  background: transparent;
+/* Page base - mobile first */
+.cart-page {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  padding: 20px;
+  min-height: calc(100vh - 80px);
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color: var(--text);
+  background: var(--bg);
+  box-sizing: border-box;
 }
 
 /* Left list */
 .cart-list {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 8px 20px rgba(15,10,10,0.03);
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(0,0,0,0.02);
 }
 .cart-list h2 {
-  margin: 0 0 16px 0;
+  margin: 0 0 12px 0;
+  font-size: 1.125rem;
 }
 
-/* Right summary card */
+/* Summary card (mobile: full width under list) */
 .cart-summary {
-  border-radius: 12px;
-  padding: 22px;
-  background: linear-gradient(180deg,#ffffff 0%, #fbfbfc 100%);
-  box-shadow: 0 8px 20px rgba(15,10,10,0.04);
-  border: 1px solid rgba(0,0,0,0.04);
-  position: sticky;
-  top: 20px;
+  border-radius: var(--radius);
+  padding: 16px;
+  background: linear-gradient(180deg,var(--card-bg) 0%, #fbfbfc 100%);
+  box-shadow: 0 6px 16px rgba(15,10,10,0.04);
+  border: 1px solid var(--muted-border);
+  position: relative;
 }
 
 /* summary lines */
-.summary-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:15px; color:#2b2b2b; }
-.summary-row.small { font-size:14px; color:#000000; }
+.summary-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; font-size:15px; color:var(--text); }
+.summary-row.small { font-size:14px; color:#000; }
 .summary-row.grand { font-size:18px; font-weight:700; margin-top:6px; }
 .muted-price { color:#464646; }
-.total { font-weight:700; color:#111; font-size: 18px;}
+.total { font-weight:700; color:#111; font-size: 18px; }
 .discounts { color:#6b110b; font-weight:600; }
 
 /* checkout button */
 .checkout-btn {
   width: 100%;
-  padding: 14px;
-  background: linear-gradient(90deg,#ef233cff,#d90429);
+  padding: 12px;
+  background: linear-gradient(90deg,var(--accent-2),var(--accent-1));
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -65,10 +77,12 @@
 .shipping-section { margin: 12px 0 16px 0; padding: 12px; background:#f9fafb; border-radius:8px; border:1px solid #f0f0f0; }
 .shipping-section h4 { margin:0 0 8px 0; font-size:15px; }
 
+/* radio column layout comfortable on mobile */
 .radio-row { display:flex; flex-direction:column; gap:8px; margin-bottom:8px; }
-.radio-row label { display:flex; gap:8px; align-items:center; font-size:14px; color:#222; }
+.radio-row label { display:flex; gap:8px; align-items:center; font-size:14px; color:var(--text); }
 .radio-row input[type="radio"] { width:16px; height:16px; }
 
+/* address blocks */
 .my-address .address-label { font-size:12px; color:#6b6b6b; margin-bottom:4px; }
 .my-address .address-value { font-size:14px; color:#111; background:#fff; padding:8px; border-radius:6px; border:1px solid #efefef; }
 
@@ -83,12 +97,6 @@
 /* messages */
 .form-error { margin-top:8px; padding:10px; background:#fff6f6; color:#b91c1c; border-radius:8px; border:1px solid #ffd6d6; }
 .form-success { margin-top:8px; padding:10px; background:#f0fff6; color:#065f46; border-radius:8px; border:1px solid #dff6e9; }
-
-/* responsive */
-@media (max-width: 900px) {
-  .cart-page { grid-template-columns: 1fr; padding: 18px; }
-  .cart-summary { position: relative; top: auto; margin-top: 18px; }
-}
 
 /* ===== Skeleton base ===== */
 .skeleton {
@@ -131,22 +139,12 @@
   gap: 10px;
 }
 
-.skeleton-line {
-  height: 14px;
-  width: 100%;
-}
-
-.skeleton-line.title {
-  height: 18px;
-  width: 60%;
-}
-
-.skeleton-line.small {
-  width: 40%;
-}
+.skeleton-line { height: 14px; width: 100%; }
+.skeleton-line.title { height: 18px; width: 60%; }
+.skeleton-line.small { width: 40%; }
 
 .cart-summary.skeleton {
-  padding: 24px;
+  padding: 16px;
   border: 1px solid #eee;
   border-radius: 10px;
   display: flex;
@@ -164,18 +162,67 @@
 }
 
 /* skeleton CTA */
-.skeleton-button {
-  height: 44px;
-  width: 100%;
-  border-radius: 8px;
-}
+.skeleton-button { height: 44px; width: 100%; border-radius: 8px; }
 
 /* ===== Animation ===== */
 @keyframes skeleton-loading {
-  0% {
-    background-position: 200% 0;
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ===== Larger screens: two-column layout with sticky summary =====
+   Use a gentle breakpoint to switch to a side summary.
+*/
+@media (min-width: 900px) {
+  .cart-page {
+    grid-template-columns: 1fr var(--summary-width);
+    gap: 28px;
+    padding: 28px;
   }
-  100% {
-    background-position: -200% 0;
+
+  .cart-list {
+    padding: 20px;
   }
+
+  /* make the summary sticky inside the viewport on larger screens */
+  .cart-summary {
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+    padding: 20px;
+  }
+}
+
+/* Wider desktops: give summary more breathing room */
+@media (min-width: 1200px) {
+  :root { --summary-width: 420px; }
+}
+
+/* ===== Accessibility: focus states ===== */
+button:focus, a:focus, input:focus, textarea:focus, select:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(217,9,25,0.12);
+  border-radius: 8px;
+}
+
+/* Improve tappable areas on mobile for radio/labels */
+.radio-row label {
+  padding: 8px 6px;
+  border-radius: 8px;
+}
+.radio-row label:active { transform: translateY(1px); }
+
+/* Make select and textarea comfortable to use on small devices */
+select, textarea {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Small tweaks for very small screens */
+@media (max-width: 420px) {
+  .cart-page { padding: 12px; gap: 14px; }
+  .cart-list { padding: 12px; }
+  .cart-summary { padding: 12px; }
+  .checkout-btn { padding: 10px; }
+  .summary-row { font-size: 14px; }
 }
