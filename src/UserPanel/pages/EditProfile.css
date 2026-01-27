@@ -135,6 +135,15 @@
   transform: none;
 }
 
+.shipping-default-picker{
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
 /* ====== MENSAJES ====== */
 .profile-error {
   margin-top: 14px;

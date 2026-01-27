@@ -237,7 +237,7 @@ export const Profile = () => {
 
         <section className="profile-benefits" aria-label="Beneficios disponibles">
           <div className="benefits-header">
-            <h2>Beneficios disponibles</h2>
+            <h2>Beneficios disponibles (Muy pronto!)</h2>
             <div className="benefits-controls">
               <span className="chip">Disponibles para mí</span>
             </div>

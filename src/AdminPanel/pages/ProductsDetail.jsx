@@ -56,6 +56,7 @@ export default function ProductsDetail() {
         isTrending: !!data.isTrending,
         isVisible: data.isVisible === undefined ? true : !!data.isVisible,
         characteristics: Array.isArray(data.characteristics) ? data.characteristics.slice() : [],
+        garmentType: data.garmentType || ''
       });
 
       const sp = data.stockPerSize && typeof data.stockPerSize === 'object' ? data.stockPerSize : {};
@@ -283,6 +284,7 @@ export default function ProductsDetail() {
         isVisible: !!form.isVisible,
         stockPerSize: Object.keys(stockObj).length ? stockObj : null,
         characteristics: Array.isArray(form.characteristics) ? form.characteristics : [],
+        garmentType: form.garmentType || ''
       };
 
       const { data, error } = await supabase
@@ -465,6 +467,19 @@ export default function ProductsDetail() {
               />
               <button className="btn" onClick={addCharacteristic}>Añadir</button>
             </div>
+          </div>
+
+          <div className='garment-type-section'>
+            <label>Tipo de prenda (garmentType)</label>
+            <select value={form.garmentType} onChange={e => onChange('garmentType', e.target.value)}>
+              <option value="">Seleccionar tipo</option>
+              <option value="stadium">Camiseta Adulto Stadium / Retro</option>
+              <option value="match">Camiseta Adulto Match</option>
+              <option value="shorts">Shorts Adulto</option>
+              <option value="camperas">Camperas</option>
+              <option value="conjuntos">Conjuntos Deportivos</option>
+              <option value="kits">Kits Niñxs (Camiseta - Short)</option>
+            </select>
           </div>
 
           <div className="images-section">

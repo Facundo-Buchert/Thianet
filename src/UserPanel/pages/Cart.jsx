@@ -23,7 +23,7 @@ export const Cart = () => {
     items = [],
     subtotal: effectiveSubtotal = null,
     totalQty = 0,
-    clearCart = () => {}
+    clearCart = () => { }
   } = useCart();
 
   const [loadingOrder, setLoadingOrder] = useState(false);
@@ -55,14 +55,17 @@ export const Cart = () => {
           setProfile(null);
           return;
         }
-        // Ajusta los campos seleccionados según tu tabla users
+        // Pedimos también default_shipping
         const { data: p, error } = await supabase
           .from('users')
-          .select('id,userId,name,mail,number,address')
+          .select('id,userId,name,mail,number,address,default_shipping')
           .eq('id', user.id)
           .single();
-        if (!error) setProfile(p || null);
-        else setProfile(null);
+        if (!error) {
+          setProfile(p || null);
+        } else {
+          setProfile(null);
+        }
       } catch (e) {
         console.warn('loadProfile error', e);
         setProfile(null);
@@ -72,6 +75,16 @@ export const Cart = () => {
     };
     loadProfile();
   }, []);
+
+  // cuando el usuario elige "mi dirección", activamos el método por defecto si existe en profile
+  useEffect(() => {
+    if (shippingMode === 'my_address' && profile?.default_shipping) {
+      // si el valor del profile no coincide con un shipping option valido, fallback al primero
+      const found = SHIPPING_OPTIONS.find(o => o.key === profile.default_shipping);
+      setSelectedMethod(found ? found.key : SHIPPING_OPTIONS[0].key);
+    }
+    // si cambias a otra dirección, dejamos el selectedMethod tal cual (el usuario puede cambiar)
+  }, [shippingMode, profile]);
 
   // -----------------------------------------
   // Totales / descuentos (mantengo la lógica que pediste)
@@ -89,19 +102,22 @@ export const Cart = () => {
   let discounts = 0;
   if (effectiveSubtotal !== null && effectiveSubtotal !== undefined) {
     const candidate = Number(effectiveSubtotal) - itemsDiscountsBase;
-    discounts = Math.max(0, itemsPrice - (isNaN(candidate) ? 0 : candidate));
+    const rawDiscounts = Math.max(0, itemsPrice - (isNaN(candidate) ? 0 : candidate));
+
+    // Aplicamos el redondeo hacia arriba a la centena
+    discounts = Math.ceil(rawDiscounts / 100) * 100;
   } else {
     discounts = 0;
   }
 
-  const totalBeforeShipping = Number(Math.max(0, itemsPrice - discounts).toFixed(2));
+  const totalBeforeShipping = Number(Math.max(0, itemsPrice - discounts).toFixed(0));
 
   const shippingOption = SHIPPING_OPTIONS.find(o => o.key === selectedMethod) || SHIPPING_OPTIONS[0];
   const shippingCost = shippingOption?.cost ?? 0;
   const isToQuote = shippingOption?.cost === null;
 
   const finalTotal = useMemo(() => {
-    return Number((totalBeforeShipping + (shippingCost || 0)).toFixed(2));
+    return Number((totalBeforeShipping + (shippingCost || 0)).toFixed(0));
   }, [totalBeforeShipping, shippingCost]);
 
   // -----------------------------------------
@@ -129,7 +145,7 @@ export const Cart = () => {
       // 2) Traer perfil desde public.users usando id (UUID)
       const { data: profileData, error: profileErr } = await supabase
         .from('users')
-        .select('id, userId, name, mail, number, address')
+        .select('id, userId, name, mail, number, address, default_shipping')
         .eq('id', user.id)
         .single();
 
@@ -167,7 +183,7 @@ export const Cart = () => {
         : `Envio: ${shippingOption?.label} ($${shippingCost}).`;
       notesFinal = notesFinal ? `${notesFinal}\n\n${shippingNote}` : shippingNote;
 
-      // payload
+      // payload (agrego shippingMethod para trazarlo)
       const payload = {
         clientId: profileData.userId ?? null,
         name: profileData.name ?? null,
@@ -175,9 +191,10 @@ export const Cart = () => {
         phone: profileData.number ?? null,
         address: finalAddress ?? null,
         items: orderItems,
-        total: Number(finalTotal.toFixed(2)),
+        total: Number(finalTotal.toFixed(0)),
         status: isToQuote ? 'pending_quote' : 'pending',
-        notes: notesFinal
+        notes: notesFinal,
+        shippingMethod: selectedMethod
       };
 
       const { error } = await supabase
@@ -211,7 +228,7 @@ export const Cart = () => {
     <main className="cart-page">
       <section className="cart-list">
         {isEmpty ? <h2>Tu carrito está vacío</h2> : <h2>Tu carrito</h2>}
-        
+
         {isEmpty ? (
           // skeleton list cuando está vacío (simula 3 items)
           <div>
@@ -244,17 +261,17 @@ export const Cart = () => {
 
         <div className="summary-row small">
           <span>Subtotal</span>
-          <span className="muted-price">${itemsPrice.toFixed(2)}</span>
+          <span className="muted-price">${itemsPrice.toFixed(0)}</span>
         </div>
 
         <div className="summary-row">
           <span>Descuentos</span>
-          <strong className="discounts">-${discounts.toFixed(2)}</strong>
+          <strong className="discounts">-${discounts.toFixed(0)}</strong>
         </div>
 
         <div className="summary-row small">
           <span>Subtotal c/descuentos</span>
-          <strong className="subtotal">${totalBeforeShipping.toFixed(2)}</strong>
+          <strong className="subtotal">${totalBeforeShipping.toFixed(0)}</strong>
         </div>
 
         <div className="shipping-section" aria-hidden={isEmpty}>
@@ -291,6 +308,12 @@ export const Cart = () => {
               <div className="address-label">Dirección de facturación / envío</div>
               <div className="address-value">
                 {loadingProfile ? 'Cargando...' : (profile?.address || 'No tenés dirección en tu perfil')}
+              </div>
+              {/* muestro método de envío que se está aplicando */}
+              <div style={{ marginTop: 8, fontSize: 13, color: '#444' }}>
+                Método de envío aplicado: <strong>{(SHIPPING_OPTIONS.find(o => o.key === selectedMethod)?.label) || selectedMethod}</strong>
+                {shippingOption?.cost !== null && ` — $${shippingOption?.cost}`}
+                {shippingOption?.cost === null && ' — A cotizar'}
               </div>
             </div>
           )}
@@ -335,12 +358,12 @@ export const Cart = () => {
 
         <div className="summary-row">
           <span>Envío</span>
-          <strong className="total">${(shippingCost || 0).toFixed(2)}</strong>
+          <strong className="total">${(shippingCost || 0).toFixed(0)}</strong>
         </div>
 
         <div className="summary-row grand">
           <span>Total</span>
-          <strong className="total">${finalTotal.toFixed(2)}</strong>
+          <strong className="total">${finalTotal.toFixed(0)}</strong>
         </div>
 
         <hr />

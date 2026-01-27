@@ -1,12 +1,12 @@
 /* src/components/SizeGuideModal.css */
-/* Responsive, accesible y con manejo de scroll interno */
+/* Basado en tu CSS previo, extendido para selector y estilos de guía */
 
 :root {
   --accent: #e30613;
   --bg-overlay: rgba(0,0,0,0.55);
   --radius: 10px;
   --gap: 20px;
-  --max-width: 960px;
+  --max-width: 980px;
   --text-muted: #666;
 }
 
@@ -23,7 +23,7 @@
 }
 
 /* container */
-.modal-container {
+.modal-container.sizeguide-modal {
   background: #fff;
   width: 100%;
   max-width: var(--max-width);
@@ -39,8 +39,8 @@
 .modal-header {
   display: flex;
   justify-content: space-between;
-  align-items: start;
-  padding: 18px 18px;
+  align-items: flex-start;
+  padding: 16px 16px;
   border-bottom: 1px solid #eee;
   gap: 12px;
 }
@@ -56,6 +56,30 @@
   margin: 6px 0 0 0;
 }
 
+/* header-controls contiene el selector (cuando apl.) y el close */
+.header-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* select label */
+.select-label {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 14px;
+  color: #222;
+}
+
+.select-label select {
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid #e6e6e6;
+  background: #fff;
+}
+
+/* close */
 .close-btn {
   font-size: 22px;
   background: none;
@@ -65,22 +89,21 @@
   padding: 6px 8px;
   border-radius: 6px;
 }
-
 .close-btn:focus {
   outline: none;
   box-shadow: 0 0 0 4px rgba(227,30,36,0.12);
 }
 
-/* content area: scrollable */
+/* content area */
 .modal-content {
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--gap);
-  padding: 18px;
+  padding: 16px;
   overflow: auto;
 }
 
-/* split panels (desktop) */
+/* left/right panels */
 .left-panel,
 .right-panel {
   display: flex;
@@ -97,13 +120,12 @@
   font-size: 14px;
 }
 
-/* diagram */
+/* diagram image */
 .shirt-diagram {
   text-align: center;
 }
-
 .shirt-diagram img {
-  width: 100%;
+  width: 70%;
   max-width: 420px;
   height: auto;
   display: block;
@@ -120,17 +142,18 @@
   color: var(--text-muted);
 }
 
-/* table wrapper para scroll horizontal en móviles */
+/* table wrap */
 .table-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  margin-top: 6px;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
-  min-width: 360px;
+  min-width: 340px;
 }
 
 th, td {
@@ -153,7 +176,7 @@ th {
 
 /* footer */
 .modal-footer {
-  padding: 12px 18px;
+  padding: 12px 16px;
   display: flex;
   justify-content: flex-end;
   border-top: 1px solid #eee;
@@ -170,45 +193,28 @@ th {
   font-weight: 700;
 }
 
-.confirm-btn:focus {
-  outline: none;
-  box-shadow: 0 0 0 4px rgba(227,30,36,0.12);
-}
-
 /* responsive layout: side-by-side on larger screens */
-@media (min-width: 768px) {
+@media (min-width: 780px) {
   .modal-content {
     grid-template-columns: 1fr 1fr;
-    padding: 22px;
+    padding: 20px 22px;
   }
 
   .shirt-diagram img {
-    max-width: 40%;
+    max-width: 100%;
   }
 }
 
 /* small screens adjustments */
 @media (max-width: 420px) {
-  .modal-header {
-    padding: 14px;
-  }
-
-  .modal-content {
-    padding: 14px;
-    gap: 12px;
-  }
-
-  .confirm-btn {
-    width: 100%;
-  }
-
-  .modal-footer {
-    padding: 12px 14px;
-  }
+  .modal-header { padding: 12px; }
+  .modal-content { padding: 12px; gap: 12px; }
+  .confirm-btn { width: 100%; }
+  .modal-footer { padding: 12px; }
 }
 
 /* focus styles */
-button:focus, a:focus, input:focus {
+button:focus, a:focus, input:focus, select:focus {
   outline: none;
   box-shadow: 0 0 0 4px rgba(227,30,36,0.12);
   border-radius: 6px;

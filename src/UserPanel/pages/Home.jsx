@@ -1,5 +1,5 @@
 // src/UserPanel/pages/Home.jsx
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useProducts } from '../../context/ProductsContext';
 import { MerchCard } from '../components/MerchCard';
 import { Link } from 'react-router-dom';
@@ -9,11 +9,37 @@ import './Home.css';
 export const Home = () => {
   const { trending } = useProducts();
 
-  // obtener publicUrl del banner (getPublicUrl es síncrono)
-  const { data: pubData } = supabase.storage.from('banners').getPublicUrl('home-banner.jpg') || {};
+  // ===== HOME TEXT =====
+  const [homeText, setHomeText] = useState({
+    text1: 'Nueva colección',
+    text2: 'Temporada 25-26',
+    text3: 'Vestí con las camisetas más emblemáticas del mundo y sumá puntos con tus compras.',
+  });
+
+  useEffect(() => {
+    const fetchHomeText = async () => {
+      const { data, error } = await supabase
+        .from('home-text')
+        .select('text1, text2, text3')
+        .single();
+
+      if (!error && data) {
+        setHomeText({
+          text1: data.text1,
+          text2: data.text2 || homeText.text2,
+          text3: data.text3 || homeText.text3,
+        });
+      }
+    };
+
+    fetchHomeText();
+  }, []);
+  // =====================
+
+  const { data: pubData } =
+    supabase.storage.from('banners').getPublicUrl('home-banner.jpg') || {};
   const publicUrl = pubData?.publicUrl ?? pubData?.public_url ?? null;
 
-  // memoizar url final (añadimos cache-buster si cambia la publicUrl)
   const bannerImg = useMemo(() => {
     if (!publicUrl) {
       return 'https://via.placeholder.com/1600x600?text=Banner+no+disponible';
@@ -26,23 +52,24 @@ export const Home = () => {
       <section
         className="hero"
         role="img"
-        aria-label="Banner: Productos top temporada 2025-2026"
+        aria-label="Banner"
         style={{
-          backgroundImage: `linear-gradient(to right, rgba(0,0,0,.6), rgba(0,0,0,0.15)), url('${bannerImg}')`
+          backgroundImage: `linear-gradient(to right, rgba(0,0,0,.6), rgba(0,0,0,0.15)), url('${bannerImg}')`,
         }}
       >
-        {/* imagen escondida para accesibilidad / lectores de pantalla */}
-        <img src={bannerImg} alt="Banner de la temporada 2025-2026" className="visually-hidden" />
+        <img
+          src={bannerImg}
+          alt="Banner de la temporada 2025-2026"
+          className="visually-hidden"
+        />
 
         <div className="hero-content">
           <h2>
-            Productos TOP
+            {homeText.text1}
             <br />
-            Temporada 25-26
+            {homeText.text2}
           </h2>
-          <p>
-            Vestí con las camisetas más emblemáticas del mundo y sumá puntos con tus compras.
-          </p>
+          <p>{homeText.text3}</p>
 
           <Link to="/catalogo" className="btn-primary" aria-label="Ir al catálogo">
             Ver catálogo

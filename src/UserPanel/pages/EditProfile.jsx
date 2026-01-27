@@ -3,6 +3,17 @@ import { Link, useNavigate } from 'react-router-dom';
 import supabase from '../../../utils/supabase';
 import './EditProfile.css';
 
+
+const SHIPPING_OPTIONS = [
+  { key: 'caba', label: 'CABA – Moto mensajería (Lunes a viernes · 15 a 22 hs)', cost: 4000 },
+  { key: 'gba1', label: 'GBA 1 – Moto mensajería (Vicente López, San Isidro, San Fernando, San Martín, Tres de Febrero, Morón, Hurlingham, Ituzaingó, La Matanza, Lomas de Zamora, Lanús, Avellaneda)', cost: 6000 },
+  { key: 'gba2', label: 'GBA 2 – Moto mensajería (Tigre, Malvinas Argentinas, José C. Paz, San Miguel, Moreno, Merlo, Ezeiza, Esteban Echeverría, Almirante Brown, Quilmes, Florencio Varela, Berazategui) - A cotizar', cost: null },
+  { key: 'correo_sucursal', label: 'Correo Arg. – Retiro en sucursal (hasta 3 prendas)', cost: 6500 },
+  { key: 'correo_domicilio', label: 'Correo Arg. – Envío a domicilio (hasta 3 prendas)', cost: 10500 },
+  { key: 'correo_mas3', label: 'Correo Argentino – Más de 3 prendas. A cotizar', cost: null },
+  { key: 'via_cargo', label: 'Vía Cargo – Retiro en terminal (Se abona el envío al retirar)', cost: 0 }
+];
+
 export const EditProfile = () => {
   const navigate = useNavigate();
 
@@ -18,7 +29,8 @@ export const EditProfile = () => {
     instagram: '',
     adress: '',
     adress_code: '',
-    location: ''
+    location: '',
+    default_shipping: ''
   });
 
   const [origEmail, setOrigEmail] = useState('');
@@ -54,7 +66,8 @@ export const EditProfile = () => {
             instagram: profile.instagram ?? '',
             adress: profile.address ?? profile.adress ?? '',
             adress_code: profile.address_code ?? profile.adress_code ?? '',
-            location: profile.location ?? ''
+            location: profile.location ?? '',
+            default_shipping: profile.default_shipping || ''
           });
         } else {
           setForm(f => ({ ...f, mail: authUser.email || '' }));
@@ -108,7 +121,8 @@ export const EditProfile = () => {
         instagram: form.instagram || null,
         address: form.adress,
         address_code: form.adress_code || null,
-        location: form.location
+        location: form.location,
+        default_shipping: form.default_shipping
       }).eq('id', user.id);
 
       const authUpdates = {};
@@ -220,18 +234,36 @@ export const EditProfile = () => {
             </div>
           </div>
 
-          {error && <div className="profile-error">{error}</div>}
-          {successMsg && <div className="profile-success">{successMsg}</div>}
-
-          <div className="profile-actions">
-            <span className="hint">Los cambios se guardan automáticamente</span>
-            <button className="save-btn" disabled={saving}>
-              {saving ? 'Guardando…' : 'Guardar cambios'}
-            </button>
+          <div className="profile-group" style={{ marginTop: 12 }}>
+            <label>Método de envío predeterminado</label>
+            <select
+              className='shipping-default-picker'
+              name="default_shipping"
+              value={form.default_shipping || ''}
+              onChange={onChange}
+            >
+              <option value="">(usar selección manual en el carrito)</option>
+              {SHIPPING_OPTIONS.map(opt => (
+                <option key={opt.key} value={opt.key}>
+                  {opt.label} {opt.cost === null ? ' — A cotizar' : ` — $${opt.cost}`}
+                </option>
+              ))}
+            </select>
+            <small className="muted">Se usará este método por defecto cuando elijas "Envío a mi dirección".</small>
           </div>
-        </form>
+
+      {error && <div className="profile-error">{error}</div>}
+      {successMsg && <div className="profile-success">{successMsg}</div>}
+
+      <div className="profile-actions">
+        <span className="hint">Los cambios se guardan automáticamente</span>
+        <button className="save-btn" disabled={saving}>
+          {saving ? 'Guardando…' : 'Guardar cambios'}
+        </button>
       </div>
-    </main>
+    </form>
+      </div >
+    </main >
   );
 };
 

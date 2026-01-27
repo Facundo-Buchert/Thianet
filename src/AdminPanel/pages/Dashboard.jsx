@@ -1,3 +1,4 @@
+// src/AdminPanel/pages/Dashboard.jsx
 import React, { useEffect, useState } from 'react'
 import * as XLSX from 'xlsx'
 import supabase from '../../../utils/supabase'
@@ -9,6 +10,11 @@ export default function Dashboard() {
   const [excelFile, setExcelFile] = useState(null)
   const [processing, setProcessing] = useState(false)
   const [log, setLog] = useState([])
+
+  // Home text state
+  const [homeText, setHomeText] = useState({ id: null, text1: '', text2: '', text3: '' })
+  const [loadingHome, setLoadingHome] = useState(false)
+  const [savingHome, setSavingHome] = useState(false)
 
   // pushLog con timestamp y categoría opcional
   const pushLog = (text, category = 'INFO') => {
@@ -27,8 +33,47 @@ export default function Dashboard() {
     }
   }
 
+  // Fetch home-text (primer registro)
+  const fetchHomeText = async () => {
+    setLoadingHome(true)
+    try {
+      // Traigo la primera fila (si existe)
+      const { data, error } = await supabase
+        .from('home-text')
+        .select('*')
+        .order('id', { ascending: true })
+        .limit(1)
+        .single()
+
+      if (error && error.code !== 'PGRST116') {
+        // PGRST116: no rows - some supabase setups return an error code on single() when no rows
+        // igualmente lo logueamos
+        pushLog('Error cargando home-text: ' + (error.message || JSON.stringify(error)), 'HOMETEXT')
+        setHomeText({ id: null, text1: '', text2: '', text3: '' })
+      } else if (data) {
+        setHomeText({
+          id: data.id ?? null,
+          text1: data.text1 ?? '',
+          text2: data.text2 ?? '',
+          text3: data.text3 ?? ''
+        })
+        pushLog('home-text cargado (id: ' + (data.id ?? 'n/a') + ')', 'HOMETEXT')
+      } else {
+        // sin filas
+        setHomeText({ id: null, text1: '', text2: '', text3: '' })
+        pushLog('home-text no tiene filas. Podés crear una.', 'HOMETEXT')
+      }
+    } catch (e) {
+      pushLog('Excepción leyendo home-text: ' + (e?.message || e), 'HOMETEXT')
+      setHomeText({ id: null, text1: '', text2: '', text3: '' })
+    } finally {
+      setLoadingHome(false)
+    }
+  }
+
   useEffect(() => {
     fetchBannerUrl()
+    fetchHomeText()
   }, [])
 
   const handleExcelUpload = (e) => {
@@ -152,6 +197,62 @@ export default function Dashboard() {
     }
   }
 
+  // HOMETEXT save
+  const saveHomeText = async () => {
+    setSavingHome(true)
+    pushLog('Guardando home-text...', 'HOMETEXT')
+    try {
+      const payload = {
+        text1: homeText.text1 ?? '',
+        text2: homeText.text2 ?? '',
+        text3: homeText.text3 ?? ''
+      }
+
+      if (homeText.id) {
+        const { data, error } = await supabase
+          .from('home-text')
+          .update(payload)
+          .eq('id', homeText.id)
+          .select()
+          .single()
+
+        if (error) {
+          pushLog('Error actualizando home-text: ' + (error.message || JSON.stringify(error)), 'HOMETEXT')
+        } else {
+          setHomeText({
+            id: data.id ?? homeText.id,
+            text1: data.text1 ?? '',
+            text2: data.text2 ?? '',
+            text3: data.text3 ?? ''
+          })
+          pushLog('home-text actualizado (id: ' + (data.id ?? homeText.id) + ')', 'HOMETEXT')
+        }
+      } else {
+        const { data, error } = await supabase
+          .from('home-text')
+          .insert([payload])
+          .select()
+          .single()
+
+        if (error) {
+          pushLog('Error insertando home-text: ' + (error.message || JSON.stringify(error)), 'HOMETEXT')
+        } else {
+          setHomeText({
+            id: data.id ?? null,
+            text1: data.text1 ?? '',
+            text2: data.text2 ?? '',
+            text3: data.text3 ?? ''
+          })
+          pushLog('home-text creado (id: ' + (data.id ?? 'n/a') + ')', 'HOMETEXT')
+        }
+      }
+    } catch (e) {
+      pushLog('Excepción guardando home-text: ' + (e?.message || e), 'HOMETEXT')
+    } finally {
+      setSavingHome(false)
+    }
+  }
+
   return (
     <div className="admin-dashboard ap-container">
       <header className="admin-dashboard-header">
@@ -236,6 +337,47 @@ export default function Dashboard() {
             <div className="module-actions">
               <button onClick={handleBannerSave} disabled={!bannerImage || processing} className="btn-primary">
                 {processing ? 'Procesando...' : 'Guardar banner'}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* HOMETEXT editor */}
+        <section className="admin-module">
+          <h3>Textos de la Home</h3>
+          <p className="muted">Editá los textos que se muestran en el hero (tabla <code>home-text</code>).</p>
+
+          <div style={{ display: 'grid', gap: 8 }}>
+            <label>Texto 1 (titulo parte 1)</label>
+            <input
+              type="text"
+              value={homeText.text1}
+              onChange={e => setHomeText(ht => ({ ...ht, text1: e.target.value }))}
+              disabled={loadingHome || savingHome}
+            />
+
+            <label>Texto 2 (titulo parte 2)</label>
+            <input
+              type="text"
+              value={homeText.text2}
+              onChange={e => setHomeText(ht => ({ ...ht, text2: e.target.value }))}
+              disabled={loadingHome || savingHome}
+            />
+
+            <label>Texto 3 (subtítulo / párrafo)</label>
+            <textarea
+              rows={3}
+              value={homeText.text3}
+              onChange={e => setHomeText(ht => ({ ...ht, text3: e.target.value }))}
+              disabled={loadingHome || savingHome}
+            />
+
+            <div className="module-actions">
+              <button onClick={saveHomeText} disabled={savingHome} className="btn-primary">
+                {savingHome ? 'Guardando...' : (homeText.id ? 'Actualizar textos' : 'Crear textos')}
+              </button>
+              <button onClick={fetchHomeText} className="btn-ghost" disabled={loadingHome}>
+                {loadingHome ? 'Recargando...' : 'Recargar desde DB'}
               </button>
             </div>
           </div>

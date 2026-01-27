@@ -15,10 +15,23 @@ export default function Orders() {
   const PAGE_SIZE = 10;
   const [expanded, setExpanded] = useState(null); // order id open
 
+  // logs
+  const [logs, setLogs] = useState([]);
+  const [showLogs, setShowLogs] = useState(true);
+
+  // helper to push a log entry (newest first)
+  const pushLog = (text, level = 'INFO') => {
+    const ts = new Date().toLocaleString();
+    const entry = `[${ts}] [${level}] ${text}`;
+    console.log(entry);
+    setLogs(prev => [entry, ...prev].slice(0, 500));
+  };
+
   // fetch orders
   const fetchOrders = async () => {
     setLoading(true);
     setError(null);
+    pushLog('Solicitando órdenes al servidor', 'INFO');
     try {
       const { data, error } = await supabase
         .from('orders')
@@ -27,9 +40,11 @@ export default function Orders() {
 
       if (error) throw error;
       setOrders(data || []);
+      pushLog(`Órdenes cargadas: ${ (data || []).length }`, 'INFO');
     } catch (err) {
       console.error(err);
       setError(err.message || 'Error al traer órdenes');
+      pushLog('Error al traer órdenes: ' + (err.message || err), 'ERROR');
       setOrders([]);
     } finally {
       setLoading(false);
@@ -37,30 +52,159 @@ export default function Orders() {
   };
 
   const closeOrders = async () => {
-    if (!window.confirm('¿Desea cerrar las ordenes enviadas y canceladas? Esta acción no se puede deshacer.')) return;
+    if (!window.confirm('¿Desea procesar (aplicar stock y puntos) y eliminar las ordenes con estado "shipped" o "canceled"? Esta acción no se puede deshacer.')) return;
+    setLoading(true);
+    setError(null);
+    pushLog('Iniciando cierre de órdenes (procesar stock/puntos y eliminar).', 'INFO');
+
     try {
+      // 1) traer órdenes a procesar
+      const { data: ordersToClose, error: fetchErr } = await supabase
+        .from('orders')
+        .select('*')
+        .in('status', ['shipped', 'canceled']);
 
-      const { error, count } = await supabase
+      if (fetchErr) throw fetchErr;
+      if (!ordersToClose || ordersToClose.length === 0) {
+        pushLog('No hay órdenes con estado shipped o canceled.', 'INFO');
+        alert('No hay órdenes con estado shipped o canceled.');
+        setLoading(false);
+        return;
+      }
 
-      // cerrar órdenes con estado 'shipped' o 'canceled'
-      .from('orders')
-      .delete({ count: 'exact' })
-      .in('status', ['shipped', 'canceled']);
+      pushLog(`Órdenes a procesar: ${ordersToClose.length}`, 'INFO');
 
-      console.log('Órdenes eliminadas:', count);
+      // procesar órdenes secuencialmente para minimizar condiciones de carrera simples
+      for (const order of ordersToClose) {
+        pushLog(`Procesando orden id=${order.id} (status=${order.status})`, 'INFO');
+        try {
+          // normalizar items (ya puede venir como json)
+          const items = Array.isArray(order.items) ? order.items : JSON.parse(order.items || '[]');
 
-      if (error) throw error;
+          // SOLO para órdenes 'shipped' aplicamos la baja de stock y asignación de puntos
+          if (order.status === 'shipped') {
+            // 2) bajar stock por cada item
+            for (const it of items) {
+              try {
+                const productId = Number(it.productId);
+                const size = (it.size || '').toString().trim();
+                const qty = Number(it.qty || 0);
+                if (!productId || qty <= 0 || !size) {
+                  pushLog(`Ítem inválido en orden ${order.id} -> productId:${it.productId} size:${it.size} qty:${it.qty}`, 'WARN');
+                  continue;
+                }
 
-      // refrescar lista
-      fetchOrders();
+                // obtener producto fresco
+                const { data: prod, error: prodErr } = await supabase
+                  .from('products')
+                  .select('id, stockPerSize, hasstock')
+                  .eq('id', productId)
+                  .single();
 
+                if (prodErr || !prod) {
+                  pushLog(`No se encontró producto id=${productId} (orden ${order.id}).`, 'WARN');
+                  console.warn(`No se encontró producto id=${productId} (orden ${order.id}):`, prodErr);
+                  continue;
+                }
+
+                // safe clone y cálculo
+                const sp = (prod.stockPerSize && typeof prod.stockPerSize === 'object') ? { ...prod.stockPerSize } : {};
+                const prev = Number(sp[size] || 0);
+                const next = Math.max(0, prev - qty);
+                sp[size] = next;
+
+                const stockTotal = Object.values(sp).reduce((s, v) => s + Number(v || 0), 0);
+                const newHasstock = stockTotal > 0;
+
+                const { error: updProdErr } = await supabase
+                  .from('products')
+                  .update({ stockPerSize: sp, hasstock: newHasstock })
+                  .eq('id', productId);
+
+                if (updProdErr) {
+                  pushLog(`Error actualizando producto ${productId} (orden ${order.id}): ${updProdErr.message || JSON.stringify(updProdErr)}`, 'ERROR');
+                  console.warn(`No se pudo actualizar stock producto ${productId}:`, updProdErr);
+                } else {
+                  pushLog(`Producto ${productId} talla ${size}: ${prev} → ${next} (orden ${order.id})`, 'INFO');
+                }
+              } catch (inner) {
+                pushLog(`Excepción procesando item en orden ${order.id}: ${inner?.message || inner}`, 'ERROR');
+                console.warn('Error procesando item para bajar stock:', inner);
+              }
+            } // end for items
+
+            // 3) asignar puntos al usuario (si existe clientId)
+            try {
+              const clientId = order.clientId ?? null; // clientId es bigint (users.userId)
+              const orderPoints = Number(order.points ?? Math.floor((Number(order.total) || 0) / 100));
+
+              if (clientId && orderPoints > 0) {
+                // obtener usuario por userId (campo userId en users)
+                const { data: userRow, error: userErr } = await supabase
+                  .from('users')
+                  .select('id, userId, points, historypoints')
+                  .eq('userId', clientId)
+                  .single();
+
+                if (userErr || !userRow) {
+                  pushLog(`No se encontró usuario con userId=${clientId} para orden ${order.id}.`, 'WARN');
+                  console.warn(`No se encontró usuario con userId=${clientId} para orden ${order.id}:`, userErr);
+                } else {
+                  const newPoints = (Number(userRow.points) || 0) + orderPoints;
+                  const newHistory = (Number(userRow.historypoints) || 0) + orderPoints;
+
+                  const { error: updUserErr } = await supabase
+                    .from('users')
+                    .update({ points: newPoints, historypoints: newHistory })
+                    .eq('userId', clientId);
+
+                  if (updUserErr) {
+                    pushLog(`Error actualizando puntos para userId=${clientId}: ${updUserErr.message || JSON.stringify(updUserErr)}`, 'ERROR');
+                    console.warn(`No se pudo actualizar puntos usuario userId=${clientId}:`, updUserErr);
+                  } else {
+                    pushLog(`Asignados ${orderPoints} pts a userId=${clientId} (orden ${order.id}).`, 'INFO');
+                    console.log(`Asignados ${orderPoints} pts a userId=${clientId} (orden ${order.id}).`);
+                  }
+                }
+              } else {
+                pushLog(`Orden ${order.id} no tiene clientId o puntos a asignar (${orderPoints}).`, 'INFO');
+              }
+            } catch (uErr) {
+              pushLog(`Error asignando puntos (orden ${order.id}): ${uErr?.message || uErr}`, 'ERROR');
+              console.warn('Error asignando puntos:', uErr);
+            }
+          } // end if shipped
+        } catch (ordErr) {
+          pushLog(`Error procesando orden id=${order.id}: ${ordErr?.message || ordErr}`, 'ERROR');
+          console.warn(`Error procesando orden id=${order.id}:`, ordErr);
+          // seguir con la siguiente orden
+        }
+      } // end for ordersToClose
+
+      // 4) eliminar las órdenes procesadas (shipped y canceled)
+      const { error: delErr, count } = await supabase
+        .from('orders')
+        .delete({ count: 'exact' })
+        .in('status', ['shipped', 'canceled']);
+
+      if (delErr) throw delErr;
+
+      pushLog(`Órdenes eliminadas: ${count || 0}`, 'INFO');
+      alert(`Proceso finalizado. Órdenes eliminadas: ${count || 0}`);
+      // refrescar
+      await fetchOrders();
     } catch (err) {
-      alert('Error al cerrar órdenes: ' + (err.message || err));
+      console.error('Error en closeOrders:', err);
+      pushLog('Error en closeOrders: ' + (err?.message || String(err)), 'ERROR');
+      alert('Error al cerrar órdenes: ' + (err?.message || String(err)));
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchOrders();
+    // eslint-disable-next-line
   }, []);
 
   // derived and filtering
@@ -69,6 +213,11 @@ export default function Orders() {
       const created = o.created_at ? new Date(o.created_at).toLocaleString() : '—';
       // items can be array or JSON string
       let items = o.items;
+      try {
+        items = Array.isArray(items) ? items : JSON.parse(items || '[]');
+      } catch (e) {
+        items = [];
+      }
       const totalItems = items.reduce((s, it) => s + (Number(it.qty || 0)), 0);
       const totalAmount = Number(o.total ?? 0);
       return { ...o, created, items, totalItems, totalAmount };
@@ -103,10 +252,13 @@ export default function Orders() {
     const prevOrders = orders;
     // optimistic update
     setOrders(prev => prev.map(o => (o.id === id ? { ...o, status: nextStatus } : o)));
+    pushLog(`Actualizando estado orden ${id} → ${nextStatus}`, 'INFO');
     try {
       const { error } = await supabase.from('orders').update({ status: nextStatus }).eq('id', id);
       if (error) throw error;
+      pushLog(`Estado orden ${id} actualizado a ${nextStatus}`, 'INFO');
     } catch (err) {
+      pushLog(`Error al actualizar estado orden ${id}: ${err?.message || err}`, 'ERROR');
       alert('Error al actualizar estado: ' + (err.message || err));
       setOrders(prevOrders); // revert
     }
@@ -114,12 +266,26 @@ export default function Orders() {
 
   const deleteOrder = async (id) => {
     if (!window.confirm('Eliminar orden? Esta acción no se puede deshacer.')) return;
+    pushLog(`Eliminando orden ${id} (solicitado por usuario)`, 'INFO');
     try {
       const { error } = await supabase.from('orders').delete().eq('id', id);
       if (error) throw error;
       setOrders(prev => prev.filter(o => o.id !== id));
+      pushLog(`Orden ${id} eliminada`, 'INFO');
     } catch (err) {
+      pushLog(`Error al eliminar orden ${id}: ${err?.message || err}`, 'ERROR');
       alert('Error al eliminar: ' + (err.message || err));
+    }
+  };
+
+  // log controls
+  const clearLogs = () => setLogs([]);
+  const copyLogs = async () => {
+    try {
+      await navigator.clipboard.writeText(logs.slice().reverse().join('\n'));
+      pushLog('Logs copiados al portapapeles', 'INFO');
+    } catch (e) {
+      pushLog('No se pudo copiar logs: ' + (e?.message || e), 'ERROR');
     }
   };
 
@@ -245,6 +411,28 @@ export default function Orders() {
             </table>
           </div>
         )}
+
+        {/* Logs panel */}
+        <div style={{ marginTop: 14 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+            <h4 style={{ margin: 0 }}>Logs de operaciones</h4>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => setShowLogs(s => !s)} className="ap-btn-clean">{showLogs ? 'Ocultar logs' : 'Mostrar logs'}</button>
+              <button onClick={copyLogs} className="ap-btn-refresh">Copiar</button>
+              <button onClick={clearLogs} className="ap-btn-clean">Limpiar</button>
+            </div>
+          </div>
+
+          {showLogs && (
+            <div style={{ marginTop: 8, maxHeight: 240, overflow: 'auto', background: '#0f1724', color: '#e6eef6', padding: 12, borderRadius: 8, fontFamily: 'monospace', fontSize: 12 }}>
+              {logs.length === 0 ? (
+                <div style={{ color: '#9aa4ad' }}>Sin actividad registrada</div>
+              ) : (
+                logs.map((l, i) => <div key={i} style={{ marginBottom: 6, whiteSpace: 'pre-wrap' }}>{l}</div>)
+              )}
+            </div>
+          )}
+        </div>
 
         <div className="ap-pagination" style={{ marginTop: 12 }}>
           <div style={{ flex: 1 }}>

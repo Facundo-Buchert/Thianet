@@ -105,6 +105,17 @@
   color: var(--accent);
 }
 
+.points {
+  color: #7b6b6b;
+  font-size: 13px;
+}
+
+.points-amount {
+  font-weight: 600;
+  color: #524c4c;
+  text-decoration: underline;
+}
+
 .description {
   color: #555;
   line-height: 1.6;

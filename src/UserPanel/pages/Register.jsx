@@ -1,10 +1,17 @@
-// src/UserPanel/pages/Register.jsx
-
-// src/UserPanel/pages/Register.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import supabase from '../../../utils/supabase';
 import './Register.css';
+
+const SHIPPING_OPTIONS = [
+  { key: 'caba', label: 'CABA – Moto mensajería (Lunes a viernes · 15 a 22 hs)', cost: 4000 },
+  { key: 'gba1', label: 'GBA 1 – Moto mensajería (Vicente López, San Isidro, San Fernando, San Martín, Tres de Febrero, Morón, Hurlingham, Ituzaingó, La Matanza, Lomas de Zamora, Lanús, Avellaneda)', cost: 6000 },
+  { key: 'gba2', label: 'GBA 2 – Moto mensajería (Tigre, Malvinas Argentinas, José C. Paz, San Miguel, Moreno, Merlo, Ezeiza, Esteban Echeverría, Almirante Brown, Quilmes, Florencio Varela, Berazategui) - A cotizar', cost: null },
+  { key: 'correo_sucursal', label: 'Correo Arg. – Retiro en sucursal (hasta 3 prendas)', cost: 6500 },
+  { key: 'correo_domicilio', label: 'Correo Arg. – Envío a domicilio (hasta 3 prendas)', cost: 10500 },
+  { key: 'correo_mas3', label: 'Correo Argentino – Más de 3 prendas. A cotizar', cost: null },
+  { key: 'via_cargo', label: 'Vía Cargo – Retiro en terminal (Se abona el envío al retirar)', cost: 0 }
+];
 
 export const Register = () => {
   const navigate = useNavigate();
@@ -16,7 +23,8 @@ export const Register = () => {
     instagram: '',
     adress: '',
     adress_code: '',
-    location: ''
+    location: '',
+    default_shipping: SHIPPING_OPTIONS[0].key // nuevo campo
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -79,7 +87,8 @@ export const Register = () => {
             ? parseFloat(String(form.adress_code).replace(',', '.'))
             : null,
           location: form.location?.trim() || null,
-          // estos normalmente ya existen, pero los dejamos explícitos
+          // nuevo campo guardado
+          default_shipping: form.default_shipping || null,
           points: 0
         };
 
@@ -90,10 +99,9 @@ export const Register = () => {
 
         if (updateErr) {
           console.error('Error actualizando perfil:', updateErr);
-          // no rompas el registro, el usuario auth ya existe
+          // no rompemos el registro; el usuario auth ya existe
         }
       }
-
 
       setSuccessMsg('Cuenta creada. Te enviamos un email de confirmación si es necesario.');
       setLoading(false);
@@ -161,6 +169,17 @@ export const Register = () => {
                 <label>Código Postal</label>
                 <input name="adress_code" value={form.adress_code} onChange={onChange} type="text" placeholder="CP 1234" />
               </div>
+            </div>
+
+            <div className="form-group">
+              <label>Método de envío por defecto</label>
+              <select name="default_shipping" value={form.default_shipping} onChange={onChange}>
+                {SHIPPING_OPTIONS.map(opt => (
+                  <option key={opt.key} value={opt.key}>
+                    {opt.label} {opt.cost === null ? ' — A cotizar' : ` — $${opt.cost}`}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {error && <div className="form-error">{error}</div>}

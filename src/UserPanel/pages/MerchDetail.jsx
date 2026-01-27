@@ -74,6 +74,8 @@ export default function MerchDetail() {
   const openModal = (e) => { e?.preventDefault?.(); setIsSizeGuideOpen(true); };
   const closeModal = () => setIsSizeGuideOpen(false);
 
+  const garmentType = product?.garmentType || '';
+
   // quantity control with bounds
   const handleQtyChange = (next) => {
     if (!selectedSize) return setQty(1);
@@ -177,12 +179,13 @@ export default function MerchDetail() {
                 <>
                   <div className="price" aria-label="Precio anterior">
                     <span className="currency">$</span>
-                    <span className="amount">{product.price0 ?? ''}</span>
+                    <span className="amount">{product.price ?? ''}</span>
                   </div>
                   <div className="price0" aria-label="Precio actual">
                     <span className="currency">$</span>
-                    <span className="amount">{product.price}</span>
+                    <span className="amount">{product.price0}</span>
                   </div>
+                  <div className="points">¡Podes ganar hasta <span className="points-amount">{Math.round((product.price0 ?? 0) / 100)}</span> puntos!</div>
                 </>
               )}
             </div>
@@ -192,6 +195,17 @@ export default function MerchDetail() {
             <div className="skeleton-line" style={{ height: 56, width: '100%', marginTop: 12 }} />
           ) : (
             <p className="description">{product.description}</p>
+          )}
+
+          {isLoading ? (
+            <div className="skeleton-line" style={{ height: 12, width: '100%', marginTop: 12 }} />
+          ) : (
+            <p className="description">
+              <strong>PROMOS CANTIDAD:</strong><br/>
+              Teniendo en el carrito en total:<br/>
+              - 3 a 9 productos: el valor de esta prenda queda en ${product.price1} c/u.<br/>
+              - 10 o más productos: queda en ${product.price2} c/u.
+            </p>
           )}
 
           <hr />
@@ -210,7 +224,7 @@ export default function MerchDetail() {
                   <button onClick={openModal} className="size-guide" type="button">Guía de talles</button>
                 </>
               )}
-              <SizeGuideModal isOpen={isSizeGuideOpen} onClose={closeModal} />
+              <SizeGuideModal isOpen={isSizeGuideOpen} onClose={closeModal} garmentType={garmentType}/>
             </div>
 
             <div className="size-grid" role="radiogroup" aria-label="Tallas disponibles">
