@@ -10,10 +10,10 @@ import "./SizeGuideModal.css";
 */
 const stadiumImg = "https://qlsdsfxwjzuqzrwrlenr.supabase.co/storage/v1/object/public/img-varias/Captura%20(1).png";
 const matchImg = "https://qlsdsfxwjzuqzrwrlenr.supabase.co/storage/v1/object/public/img-varias/Captura%20(1).png";
-const shortsImg = "https://qlsdsfxwjzuqzrwrlenr.supabase.co/storage/v1/object/public/img-varias/Captura%20(1).png";
-const conjuntosImg = "https://qlsdsfxwjzuqzrwrlenr.supabase.co/storage/v1/object/public/img-varias/Captura%20(1).png";
-const kitsImg = "https://qlsdsfxwjzuqzrwrlenr.supabase.co/storage/v1/object/public/img-varias/Captura%20(1).png";
-const camperasImg = "https://qlsdsfxwjzuqzrwrlenr.supabase.co/storage/v1/object/public/img-varias/Captura%20(1).png";
+const shortsImg = "https://qlsdsfxwjzuqzrwrlenr.supabase.co/storage/v1/object/public/img-varias/shorts.jpeg";
+const conjuntosImg = "https://qlsdsfxwjzuqzrwrlenr.supabase.co/storage/v1/object/public/img-varias/conjunto-deportivo.jpeg";
+const kitsImg = "https://qlsdsfxwjzuqzrwrlenr.supabase.co/storage/v1/object/public/img-varias/kit.jpeg";
+const camperasImg = "https://qlsdsfxwjzuqzrwrlenr.supabase.co/storage/v1/object/public/img-varias/campera.jpeg";
 
 const GUIDES = [
   {
