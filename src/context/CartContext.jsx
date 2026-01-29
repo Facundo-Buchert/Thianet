@@ -106,7 +106,7 @@ export const CartProvider = ({ children }) => {
     const p2 = (item.price2 !== undefined && item.price2 !== null) ? Number(item.price2) : p1;
 
     if (qty >= 10) return p2;
-    if (qty >= 4) return p1;
+    if (qty >= 3) return p1;
     return p0;
   };
 

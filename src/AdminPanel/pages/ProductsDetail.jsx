@@ -404,7 +404,7 @@ export default function ProductsDetail() {
           <label>Precio base (price0)</label>
           <input value={form.price0} onChange={e => onChange('price0', e.target.value)} />
 
-          <label>Price1 (4-9)</label>
+          <label>Price1 (3-9)</label>
           <input value={form.price1} onChange={e => onChange('price1', e.target.value)} />
 
           <label>Price2 (=10)</label>
