@@ -153,8 +153,8 @@ export const Catalogo = () => {
 
       <footer className="pagination" aria-label="Paginación">
         <div className="pager-left">
-          <button onClick={first} disabled={page === 1} aria-disabled={page === 1} aria-label="Ir a la primera página">Primera</button>
-          <button onClick={prev} disabled={page === 1} aria-disabled={page === 1} aria-label="Página anterior">Anterior</button>
+          <button onClick={() => { first(); window.scrollTo(0, 0); }} disabled={page === 1} aria-disabled={page === 1} aria-label="Ir a la primera página">Primera</button>
+          <button onClick={() => { prev(); window.scrollTo(0, 0); }} disabled={page === 1} aria-disabled={page === 1} aria-label="Página anterior">Anterior</button>
         </div>
 
         <div className="pager-center" aria-live="polite">
@@ -162,8 +162,8 @@ export const Catalogo = () => {
         </div>
 
         <div className="pager-right">
-          <button onClick={next} disabled={page === maxPages} aria-disabled={page === maxPages} aria-label="Página siguiente">Siguiente</button>
-          <button onClick={last} disabled={page === maxPages} aria-disabled={page === maxPages} aria-label="Ir a la última página">Última</button>
+          <button onClick={() => { next(); window.scrollTo(0, 0); }} disabled={page === maxPages} aria-disabled={page === maxPages} aria-label="Página siguiente">Siguiente</button>
+          <button onClick={() => { last(); window.scrollTo(0, 0); }} disabled={page === maxPages} aria-disabled={page === maxPages} aria-label="Ir a la última página">Última</button>
         </div>
       </footer>
     </main>

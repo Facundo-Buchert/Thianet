@@ -97,6 +97,7 @@ export default function MerchDetail() {
       size: selectedSize,
       qty,
       price: Number(product.price ?? 0),
+      price0: product.price0 !== undefined ? Number(product.price0) : undefined,
       price1: product.price1 !== undefined ? Number(product.price1) : undefined,
       price2: product.price2 !== undefined ? Number(product.price2) : undefined,
       maxStock: available,

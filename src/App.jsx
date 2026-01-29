@@ -28,36 +28,37 @@ import { Config } from "./AdminPanel/pages/Config";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import AdminRoute from "./routes/AdminRoute";
 
+import { Outlet } from "react-router-dom";
+import ScrollToTop from "./UserPanel/components/ScrollToTop";
+
 import "./index.css";
 
-const router = createBrowserRouter([
-  { path: "/", element: <><Header /><Home /><Footer /></> },
-  { path: "/catalogo", element: <><Header /><Catalogo /><Footer /></> },
-  { path: "/merch/:id", element: <><Header /><MerchDetail /><Footer /></> },
-  { path: "/carrito", element: <><Header /><Cart /><Footer /></> },
+const RootLayout = () => (
+  <>
+    <ScrollToTop />
+    <Outlet />
+  </>
+);
 
+const router = createBrowserRouter([
   {
-    path: "/profile",
-    element: (
-      <ProtectedRoute>
-        <Header />
-        <Profile />
-        <Footer />
-      </ProtectedRoute>
-    ),
+    element: <RootLayout />, children: [
+      { path: "/", element: <><Header /><Home /><Footer /></> },
+      { path: "/catalogo", element: <><Header /><Catalogo /><Footer /></> },
+      { path: "/merch/:id", element: <><Header /><MerchDetail /><Footer /></> },
+      { path: "/carrito", element: <><Header /><Cart /><Footer /></> },
+
+      { path: "/preguntas-frecuentes", element: <><Header /><FAQ /><Footer /></> },
+      { path: "/terminos-y-condiciones", element: <><Header /><TermsAndConditions /><Footer /></> },
+    ]
   },
+  { path: "/profile", element: ( <ProtectedRoute> <Header /> <Profile /> <Footer /> </ProtectedRoute> ) },
+  { path: "/profile/edit", element: <ProtectedRoute> <Header /><EditProfile /><Footer /> </ProtectedRoute> },
 
   { path: "/profile/login", element: <Login /> },
   { path: "/profile/register", element: <Register /> },
-  
-  { path: "/profile/edit", element: 
-    <ProtectedRoute>
-      <Header /><EditProfile /><Footer />
-    </ProtectedRoute>
-  },
 
-  { path: "/preguntas-frecuentes", element: <><Header /><FAQ /><Footer /></> },
-  { path: "/terminos-y-condiciones", element: <><Header /><TermsAndConditions /><Footer /></> },
+
 
   // ADMIN
   {

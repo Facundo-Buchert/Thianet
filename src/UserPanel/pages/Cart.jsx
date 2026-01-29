@@ -21,9 +21,11 @@ export const Cart = () => {
   // useCart: defensivo por si tu contexto no provee alguno de estos campos
   const {
     items = [],
-    subtotal: effectiveSubtotal = null,
+    subtotal: effectiveSubtotalFromContext = 0,   // lo que se cobra desde el contexto (no lo vamos a preferir)
+    originalSubtotal: originalSubtotalFromContext = 0,
     totalQty = 0,
-    clearCart = () => { }
+    clearCart = () => { },
+    getEffectivePrice = () => 0
   } = useCart();
 
   const [loadingOrder, setLoadingOrder] = useState(false);
@@ -41,7 +43,6 @@ export const Cart = () => {
   const [loadingProfile, setLoadingProfile] = useState(false);
 
   useEffect(() => {
-    // load profile (if logged)
     const loadProfile = async () => {
       setLoadingProfile(true);
       try {
@@ -55,17 +56,13 @@ export const Cart = () => {
           setProfile(null);
           return;
         }
-        // Pedimos también default_shipping
         const { data: p, error } = await supabase
           .from('users')
           .select('id,userId,name,mail,number,address,default_shipping')
           .eq('id', user.id)
           .single();
-        if (!error) {
-          setProfile(p || null);
-        } else {
-          setProfile(null);
-        }
+        if (!error) setProfile(p || null);
+        else setProfile(null);
       } catch (e) {
         console.warn('loadProfile error', e);
         setProfile(null);
@@ -76,41 +73,67 @@ export const Cart = () => {
     loadProfile();
   }, []);
 
-  // cuando el usuario elige "mi dirección", activamos el método por defecto si existe en profile
   useEffect(() => {
     if (shippingMode === 'my_address' && profile?.default_shipping) {
-      // si el valor del profile no coincide con un shipping option valido, fallback al primero
       const found = SHIPPING_OPTIONS.find(o => o.key === profile.default_shipping);
       setSelectedMethod(found ? found.key : SHIPPING_OPTIONS[0].key);
     }
-    // si cambias a otra dirección, dejamos el selectedMethod tal cual (el usuario puede cambiar)
   }, [shippingMode, profile]);
 
   // -----------------------------------------
-  // Totales / descuentos (mantengo la lógica que pediste)
+  // Totales / descuentos (regla solicitada)
   // -----------------------------------------
-  const itemsPrice = useMemo(() => {
-    return items.reduce((acc, it) => {
+  // Calculamos localmente (siempre) origSubtotal y effSubtotal a partir de los items actuales.
+  // Esto evita confiar en valores stale del contexto y garantiza descuento correcto para 1-3 items.
+  const computed = useMemo(() => {
+    // subtotal visible (precio mostrado por ítem): preferimos item.price (si existe),
+    // si no existe, tomamos el máximo entre price0/price1/price2 como fallback razonable.
+    const origSubtotal = items.reduce((acc, it) => {
       const qty = Number(it.qty || 0);
-      const p0 = Number(it.price0 ?? it.price ?? 0);
-      return acc + qty * p0;
+      const visible =  Number(it.price);
+      return acc + qty * visible;
     }, 0);
-  }, [items]);
 
-  const itemsDiscountsBase = itemsPrice ? itemsPrice - itemsPrice / 1.14 : 0;
+    // effective subtotal calculado LOCALMENTE según reglas (1-3 price0, 4-9 price1, >=10 price2)
+    const effLocal = items.reduce((acc, it) => {
+      const qty = Number(it.qty || 0);
+      // getEffectivePrice toma total como segundo arg; pasamos totalQty explícito
+      const effPrice = Number(getEffectivePrice(it, totalQty) || 0);
+      return acc + qty * effPrice;
+    }, 0);
 
-  let discounts = 0;
-  if (effectiveSubtotal !== null && effectiveSubtotal !== undefined) {
-    const candidate = Number(effectiveSubtotal) - itemsDiscountsBase;
-    const rawDiscounts = Math.max(0, itemsPrice - (isNaN(candidate) ? 0 : candidate));
+    // discounts calculado por item: suma( (visible - effPrice) * qty ), y aseguramos >=0
+    const rawDiscountsByItems = items.reduce((acc, it) => {
+      const qty = Number(it.qty || 0);
+      const visible = (it.price);
+      const effPrice = Number(getEffectivePrice(it, totalQty) || 0);
+      const perItem = Math.max(0, visible - effPrice);
+      
+      console.log('Item', it.productId, 'qty', qty, 'visible', visible, 'effPrice', effPrice, 'perItem', perItem);
+      return acc + perItem * qty;
+    }, 0);
 
-    // Aplicamos el redondeo hacia arriba a la centena
-    discounts = Math.ceil(rawDiscounts / 100) * 100;
-  } else {
-    discounts = 0;
-  }
+    // Use effLocal ALWAYS (no fallback a valores externos).
+    const effSubtotal = effLocal;
 
-  const totalBeforeShipping = Number(Math.max(0, itemsPrice - discounts).toFixed(0));
+    const rawDiscounts = Math.max(0, rawDiscountsByItems, origSubtotal - effSubtotal);
+
+    return {
+      origSubtotal,
+      effSubtotal,
+      rawDiscounts
+    };
+  }, [items, totalQty, getEffectivePrice]);
+
+  const origSubtotalSafe = Number(computed.origSubtotal || 0);
+  const effSubtotalSafe = Number(computed.effSubtotal || 0);
+  const rawDiscounts = Number(computed.rawDiscounts || 0);
+
+  // redondeo a la centena superior
+  const discounts = rawDiscounts > 0 ? Math.ceil(rawDiscounts / 100) * 100 : 0;
+
+  // totalBeforeShipping lo calculamos restando el descuento redondeado al subtotal visible (como venías haciendo)
+  const totalBeforeShipping = Number(Math.max(0, origSubtotalSafe - discounts).toFixed(0));
 
   const shippingOption = SHIPPING_OPTIONS.find(o => o.key === selectedMethod) || SHIPPING_OPTIONS[0];
   const shippingCost = shippingOption?.cost ?? 0;
@@ -129,7 +152,6 @@ export const Cart = () => {
     setLoadingOrder(true);
 
     try {
-      // 1) Usuario autenticado
       const { data: userData, error: authErr } = await supabase.auth.getUser();
       if (authErr) {
         setErrorOrder('Error de autenticación.');
@@ -142,7 +164,6 @@ export const Cart = () => {
         return;
       }
 
-      // 2) Traer perfil desde public.users usando id (UUID)
       const { data: profileData, error: profileErr } = await supabase
         .from('users')
         .select('id, userId, name, mail, number, address, default_shipping')
@@ -156,7 +177,6 @@ export const Cart = () => {
         return;
       }
 
-      // determinar address final
       let finalAddress = profileData.address || null;
       if (shippingMode === 'other') {
         if (!otherAddress || otherAddress.trim() === '') {
@@ -167,23 +187,20 @@ export const Cart = () => {
         finalAddress = otherAddress.trim();
       }
 
-      // items payload
       const orderItems = items.map(it => ({
         productId: it.productId,
         title: it.title,
         size: it.size,
         qty: Number(it.qty),
-        unitPrice: Number(it.price0 ?? it.price)
+        unitPrice: Number(getEffectivePrice(it, totalQty))
       }));
 
-      // notas
       let notesFinal = (notes || '').toString().trim();
       const shippingNote = isToQuote
         ? `Envio: ${shippingOption?.label} (A COTIZAR).`
         : `Envio: ${shippingOption?.label} ($${shippingCost}).`;
       notesFinal = notesFinal ? `${notesFinal}\n\n${shippingNote}` : shippingNote;
 
-      // payload (agrego shippingMethod para trazarlo)
       const payload = {
         clientId: profileData.userId ?? null,
         name: profileData.name ?? null,
@@ -220,7 +237,7 @@ export const Cart = () => {
   };
 
   // -----------------------------------------
-  // RENDER: siempre renderizo la misma estructura
+  // RENDER
   // -----------------------------------------
   const isEmpty = !items || items.length === 0;
 
@@ -230,7 +247,6 @@ export const Cart = () => {
         {isEmpty ? <h2>Tu carrito está vacío</h2> : <h2>Tu carrito</h2>}
 
         {isEmpty ? (
-          // skeleton list cuando está vacío (simula 3 items)
           <div>
             {[1, 2, 3].map((i) => (
               <div key={i} className="cart-item skeleton">
@@ -244,7 +260,6 @@ export const Cart = () => {
             ))}
           </div>
         ) : (
-          // lista real
           <div>
             {items.map(item => (
               <CartCard
@@ -261,7 +276,7 @@ export const Cart = () => {
 
         <div className="summary-row small">
           <span>Subtotal</span>
-          <span className="muted-price">${itemsPrice.toFixed(0)}</span>
+          <span className="muted-price">${(origSubtotalSafe).toFixed(0)}</span>
         </div>
 
         <div className="summary-row">
@@ -309,7 +324,6 @@ export const Cart = () => {
               <div className="address-value">
                 {loadingProfile ? 'Cargando...' : (profile?.address || 'No tenés dirección en tu perfil')}
               </div>
-              {/* muestro método de envío que se está aplicando */}
               <div style={{ marginTop: 8, fontSize: 13, color: '#444' }}>
                 Método de envío aplicado: <strong>{(SHIPPING_OPTIONS.find(o => o.key === selectedMethod)?.label) || selectedMethod}</strong>
                 {shippingOption?.cost !== null && ` — $${shippingOption?.cost}`}
