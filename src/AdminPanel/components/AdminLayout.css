@@ -42,4 +42,8 @@
         margin-left: 0;
         padding: 16px;
     }
+    .admin-secondline{
+        flex-direction: column;
+        align-items: center;
+    }
 }

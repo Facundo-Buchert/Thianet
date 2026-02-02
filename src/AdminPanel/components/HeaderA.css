@@ -113,4 +113,7 @@
 @media (max-width: 720px) {
   .brand-title { display: none; }
   .admin-header { padding: 0 12px; }
+  .logo a{
+    margin-left: 0;
+  }
 }

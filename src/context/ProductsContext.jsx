@@ -107,8 +107,33 @@ export const ProductsProvider = ({ children }) => {
     let list = [...allProducts];
 
     if (debouncedSearch) {
-      const q = debouncedSearch.toLowerCase();
-      list = list.filter(p => (p.title || '').toLowerCase().includes(q));
+      const normalize = (str = '') =>
+        str
+          .toString()
+          .normalize('NFD')
+          .replace(/\p{M}/gu, '')
+          .toLowerCase();
+
+      const tokens = normalize(debouncedSearch)
+        .split(/\s+/)
+        .filter(Boolean); // palabras separadas por espacios
+
+      list = list.filter(p => {
+        const searchable = normalize(
+          [
+            p.title,
+            p.category,
+            p.subtitle,
+            p.description,
+            p.brand,
+            Array.isArray(p.tags) ? p.tags.join(' ') : '',
+            p.sku
+          ].join(' ')
+        );
+
+        // TODAS las palabras deben existir como substring
+        return tokens.every(t => searchable.includes(t));
+      });
     }
 
     if (category && category !== 'all') {
@@ -120,7 +145,6 @@ export const ProductsProvider = ({ children }) => {
     } else if (order === 'price-desc') {
       list.sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
     } else {
-      // mantengo orden por id por defecto (opcional)
       list.sort((a, b) => (a.id || 0) - (b.id || 0));
     }
 

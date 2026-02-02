@@ -3,13 +3,12 @@ import supabase from '../../../utils/supabase';
 import './Clients.css';
 
 /*
-  Funcionalidades principales:
+  Funcionalidades principales (sin cambios salvo edición de puntos):
   - Listado paginado de users (desde tabla `users`)
   - Búsqueda por nombre / email / userId
   - Modal de detalle que muestra cart_items, últimos pedidos y metadata
-  - Botón "Banear" que intenta invocar la Edge Function "admin-ban-user"
-    (la función debe existir en tu proyecto Supabase; si no existe, se muestra
-     un mensaje con la instrucción para banear desde el panel).
+  - Edición inline de "points" que persiste en la tabla `users`
+  - Botón "Banear" (intentado via Edge Function, comentado por defecto)
 */
 
 const PAGE_SIZE = 12;
@@ -19,11 +18,16 @@ export default function Clients() {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState(null); // user object para modal
+  const [selected, setSelected] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [detailData, setDetailData] = useState(null); // orders, cart parsed, etc.
-  const [processingId, setProcessingId] = useState(null); // id para acciones en curso
+  const [detailData, setDetailData] = useState(null);
+  const [processingId, setProcessingId] = useState(null);
   const [error, setError] = useState(null);
+
+  // --- NUEVO: edición de puntos ---
+  const [editingId, setEditingId] = useState(null); // uuid
+  const [editingPoints, setEditingPoints] = useState(''); // valor temporal
+  const [savingPoints, setSavingPoints] = useState(false);
 
   // traer usuarios
   const fetchUsers = async () => {
@@ -70,7 +74,6 @@ export default function Clients() {
     setDetailData(null);
 
     try {
-      // orders recientes
       const { data: recentOrders, error: ordErr } = await supabase
         .from('orders')
         .select('id,created_at,status,total')
@@ -80,13 +83,11 @@ export default function Clients() {
 
       if (ordErr) throw ordErr;
 
-      // count orders
       const { count } = await supabase
         .from('orders')
         .select('id', { count: 'exact', head: true })
         .eq('clientId', user.userId);
 
-      // parse cart_items (jsonb or text)
       let cart = [];
       try {
         if (!user.cart_items) cart = [];
@@ -142,36 +143,70 @@ export default function Clients() {
   };
 
   // BAN user -> intenta invocar Edge Function "admin-ban-user"
-  // La función debe existir y recibir { auth_id } o { user_id } segun implementes.
-  // Si no existe, informamos al admin que lo haga desde Supabase Dashboard.
   const banUser = async (user) => {
     if (!window.confirm(`Banear al usuario ${user.name || user.mail || user.userId}?`)) return;
     setProcessingId(user.id);
     setError(null);
 
     try {
-      // Intento invocar Edge Function (requiere que la hayas creado con role admin en server-side)
       const res = await supabase.functions.invoke('admin-ban-user', {
         body: JSON.stringify({ auth_id: user.id, userId: user.userId })
       });
 
-      // supabase.functions.invoke retorna { data, error } en v2
       if (res?.error) throw res.error;
-      // marcar localmente (optimista) — puede que tu function actualice auth.users y también tu tabla users
       setUsers(prev => prev.map(u => u.id === user.id ? { ...u, banned_at: new Date().toISOString() } : u));
       alert('Ban realizado (o pedido enviado). Verifica en Supabase console.');
     } catch (err) {
       console.error(err);
-      // si falla por no existir la función, damos instrucción clara
       if (String(err.message || err).toLowerCase().includes('not found') || String(err).includes('Function')) {
-        alert('No se encontró la Edge Function "admin-ban-user". Para banear desde la consola Supabase: ve a Authentication → Users → seleccioná el usuario → "Disable user". Si querés, te genero el ejemplo de Edge Function.');
+        alert('No se encontró la Edge Function "admin-ban-user". Para banear desde la consola Supabase: Authentication → Users → Disable user.');
       } else {
         alert('Error al banear: ' + (err.message || err));
       }
     } finally {
       setProcessingId(null);
     }
-  };  
+  };
+
+  // --- NUEVO: manejo edición de puntos ---
+  const startEditPoints = (u) => {
+    setEditingId(u.id);
+    setEditingPoints(String(Number(u.points || 0)));
+  };
+
+  const cancelEditPoints = () => {
+    setEditingId(null);
+    setEditingPoints('');
+  };
+
+  const savePoints = async (u) => {
+    const parsed = Number(editingPoints);
+    if (Number.isNaN(parsed) || parsed < 0) {
+      alert('Ingrese un número válido (>= 0).');
+      return;
+    }
+    setSavingPoints(true);
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .update({ points: parsed })
+        .eq('id', u.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // actualizar UI localmente
+      setUsers(prev => prev.map(item => item.id === u.id ? { ...item, points: parsed } : item));
+      setEditingId(null);
+      setEditingPoints('');
+    } catch (err) {
+      console.error(err);
+      alert('Error guardando puntos: ' + (err.message || err));
+    } finally {
+      setSavingPoints(false);
+    }
+  };
 
   return (
     <div className="clients-page ap-container">
@@ -221,10 +256,32 @@ export default function Clients() {
                     <td>{u.mail || '—'}</td>
                     <td>{u.number ?? '—'}</td>
                     <td>{u.location || '—'}</td>
-                    <td>{Number(u.points || 0)}</td>
+                    <td>
+                      {/* inline edit points */}
+                      {editingId === u.id ? (
+                        <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                          <input
+                            type="number"
+                            min="0"
+                            value={editingPoints}
+                            onChange={e => setEditingPoints(e.target.value)}
+                            style={{width:90,padding:4}}
+                            disabled={savingPoints}
+                          />
+                          <button onClick={() => savePoints(u)} disabled={savingPoints}>Guardar</button>
+                          <button onClick={cancelEditPoints} disabled={savingPoints}>Cancelar</button>
+                        </div>
+                      ) : (
+                        <div style={{display:'flex',gap:8,alignItems:'center',justifyContent:'flex-start'}}>
+                          <span>{Number(u.points || 0)}</span>
+                          <button title="Editar puntos" onClick={() => startEditPoints(u)} style={{padding:'4px 6px'}}>✎</button>
+                        </div>
+                      )}
+                    </td>
                     <td>{u.created_at ? new Date(u.created_at).toLocaleDateString() : '—'}</td>
                     <td style={{textAlign:'right'}} className="ap-controls">
                       <button onClick={() => openDetail(u)} title="Ver detalle">Ver</button>
+                      {/* Si querés habilitar ban: descomentar y asegurarte que la Edge Function exista */}
                       {/*<button
                         onClick={() => banUser(u)}
                         disabled={processingId === u.id}
@@ -278,7 +335,6 @@ export default function Clients() {
                     <h4>Datos</h4>
                     <hr></hr><br></br>
                     <div className="detail-row"><strong>userId:</strong> <span className="mono">{selected.userId}</span></div>
-                    {/*<div className="detail-row"><strong>UUID:</strong> <span className="mono">{selected.id}</span></div>*/}
                     <div className="detail-row"><strong>Email:</strong> {selected.mail || '—'}</div>
                     <div className="detail-row"><strong>Teléfono:</strong> {selected.number || '—'}</div>
                     <div className="detail-row"><strong>Localidad:</strong> {selected.location || '—'}</div>

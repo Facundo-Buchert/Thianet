@@ -1,0 +1,10 @@
+RewriteEngine On
+RewriteBase /
+
+# Si el archivo o carpeta existe físicamente, cargalo normalmente
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Si la ruta no existe (ej. /dashboard), serví el index.html sin cambiar la URL
+RewriteRule ^ /index.html [L]

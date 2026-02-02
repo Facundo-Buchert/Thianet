@@ -1,6 +1,5 @@
 /* MenuA.css */
 .admin-menu {
-  width: 260px;
   min-width: 260px;
   background: var(--bg, #fcf8f8);
   border-right: 1px solid #f3e7e8;
@@ -30,7 +29,7 @@
   border-radius: 8px;
   background-size: cover;
   background-position: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 
 .menu-user-info {
@@ -80,7 +79,7 @@
 }
 
 .nav-item.active {
-  background: rgba(236,19,30,0.08);
+  background: rgba(236, 19, 30, 0.08);
   color: #c40f18;
 }
 
@@ -106,9 +105,28 @@
   cursor: pointer;
 }
 
-.logout-btn .material-symbols-outlined { font-size: 18px; }
+.logout-btn .material-symbols-outlined {
+  font-size: 18px;
+}
 
 /* responsive: collapse sidebar on small screens */
-@media (max-width: 920px) {
-  .admin-menu { display: none; }
+@media (max-width: 900px) {
+
+  .menu-user-info,
+  .menu-avatar {
+    display: none;
+  }
+
+  .menu-nav {
+    display: grid;
+    /* Crea 2 columnas de igual tamaño */
+    grid-template-columns: repeat(2, 1fr);
+    /* Espaciado entre elementos */
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .admin-menu {
+    width: 100%;
+  }
 }

@@ -2,6 +2,7 @@
 import React from 'react';
 import { useProducts } from '../../context/ProductsContext';
 import { MerchCard } from '../components/MerchCard';
+import { useMemo } from 'react';
 import './Catalogo.css';
 
 export const Catalogo = () => {
@@ -33,6 +34,107 @@ export const Catalogo = () => {
       setPage(1);
     }
   };
+
+  const sortedCategories = useMemo(() => {
+    const arr = Array.from(new Set(categories || []));
+    const hasAll = arr.includes('all');
+    const others = arr.filter(c => c !== 'all');
+
+    const rankFor = (s = '') => {
+      const lower = String(s).toLowerCase();
+      if (lower.includes('25/26')) return 0;
+      if (lower.includes('retro')) return 1;
+      return 2;
+    };
+
+    others.sort((a, b) => {
+      const ra = rankFor(a);
+      const rb = rankFor(b);
+      if (ra !== rb) return ra - rb;
+      return String(a).localeCompare(String(b), 'es', { sensitivity: 'base' });
+    });
+
+    return hasAll ? ['all', ...others] : others;
+  }, [categories]);
+
+  // displayedProducts: cada palabra en el input (separada por espacios) actúa como criterio independiente (AND).
+  // Si no hay resultados con AND, cae a OR (parcial).
+  const displayedProducts = useMemo(() => {
+    if (!search || !String(search).trim()) return products;
+
+    const normalize = (s = '') =>
+      String(s)
+        .normalize('NFD')
+        .replace(/\p{M}/gu, '') // quitar tildes
+        .toLowerCase()
+        .trim();
+
+    // conserva "/" y "-" en tokens (para casos como 25/26)
+    const sanitizeToken = (t = '') =>
+      normalize(t).replace(/[^\p{L}\p{N}\/\-]+/gu, ''); // letras, números, / y -
+
+    const rawTokens = String(search)
+      .trim()
+      .split(/\s+/)
+      .map(sanitizeToken)
+      .filter(Boolean);
+
+    if (rawTokens.length === 0) return products;
+
+    // campos donde buscarnos
+    const makeSearchable = (p) => {
+      const parts = [];
+      ['title', 'category', 'subtitle', 'description', 'brand', 'tags', 'sku'].forEach(k => {
+        if (p[k]) {
+          if (Array.isArray(p[k])) parts.push(p[k].join(' '));
+          else parts.push(String(p[k]));
+        }
+      });
+      return normalize(parts.join(' '));
+    };
+
+    const tokenMatch = (token, searchable) => {
+      if (!token) return false;
+      // match substring simple (permite "rem" -> "remera", "boc" -> "boca")
+      if (searchable.includes(token)) return true;
+      // también intentar prefijo de palabras (ej: token "boc" -> palabra "boca")
+      const words = searchable.split(/\s+/).map(w => w.replace(/[^\p{L}\p{N}\/\-]/gu, ''));
+      if (words.some(w => w.startsWith(token))) return true;
+      return false;
+    };
+
+    // AND: todos los tokens deben aparecer en algún lugar (en cualquier campo)
+    const andMatches = products
+      .map(p => {
+        const searchable = makeSearchable(p);
+        const ok = rawTokens.every(t => tokenMatch(t, searchable));
+        return { p, ok };
+      })
+      .filter(x => x.ok)
+      .map(x => x.p);
+
+    if (andMatches.length > 0) {
+      // ordenar alfabeticamente por título
+      return andMatches.sort((a, b) => String((a.title || '')).localeCompare(String((b.title || '')), 'es', { sensitivity: 'base' }));
+    }
+
+    // Fallback OR: al menos 1 token coincide -> ordenar por cantidad de tokens coincidentes (desc)
+    const orMatches = products
+      .map(p => {
+        const searchable = makeSearchable(p);
+        let matchedCount = 0;
+        for (const t of rawTokens) if (tokenMatch(t, searchable)) matchedCount++;
+        return { p, matchedCount };
+      })
+      .filter(x => x.matchedCount > 0)
+      .sort((a, b) => {
+        if (b.matchedCount !== a.matchedCount) return b.matchedCount - a.matchedCount;
+        return String(a.p.title || '').localeCompare(String(b.p.title || ''), 'es', { sensitivity: 'base' });
+      })
+      .map(x => x.p);
+
+    return orMatches;
+  }, [products, search]);
 
   return (
     <main className="catalogo-page" role="main">
@@ -75,10 +177,10 @@ export const Catalogo = () => {
               onChange={e => { setCategory(e.target.value); setPage(1); }}
               aria-label="Seleccionar categoría"
             >
-              {categories.length === 0 ? (
+              {sortedCategories.length === 0 ? (
                 <option value="all">Todas</option>
               ) : (
-                categories.map(c => (
+                sortedCategories.map(c => (
                   <option key={c} value={c}>
                     {c === 'all' ? 'Todas' : c}
                   </option>
@@ -130,7 +232,7 @@ export const Catalogo = () => {
               <div key={i} className="skeleton-card" aria-hidden="true" />
             ))}
           </div>
-        ) : products.length === 0 ? (
+        ) : displayedProducts.length === 0 ? (
           <div className="empty-state" role="status">
             <p>No se encontraron productos.</p>
             <button
@@ -142,7 +244,7 @@ export const Catalogo = () => {
           </div>
         ) : (
           <div className="products grid" role="list">
-            {products.map(p => (
+            {displayedProducts.map(p => (
               <div key={p.id} role="listitem">
                 <MerchCard product={p} />
               </div>

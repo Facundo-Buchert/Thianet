@@ -1,4 +1,4 @@
-// index.ts (Edge Function - import-products) - versión robusta
+// index.ts (Edge Function - import-products) - versión robusta y segura
 //@ts-ignore
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.34.0';
 //@ts-ignore
@@ -10,7 +10,6 @@ function corsHeaders() {
   return {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    // incluir headers que el SDK / navegador suele enviar
     'Access-Control-Allow-Headers':
       'Content-Type, Authorization, apikey, x-client-info, x-client-version, x-requested-with, accept, origin, referer',
     'Access-Control-Max-Age': '600',
@@ -21,7 +20,6 @@ function corsHeaders() {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 Deno.serve(async (req: Request): Promise<Response> => {
-  // CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: corsHeaders() });
   }
@@ -59,7 +57,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
     const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { global: { fetch } });
 
-    // Intentos de descarga (variantes del nombre)
     async function tryDownloadFromBucket(bucket: string, path: string) {
       const attempts = [
         path,
@@ -87,7 +84,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
         }
       }
 
-      // fallback: listar para diagnóstico
       try {
         const { data: listData, error: listErr } = await supabaseAdmin.storage.from(bucket).list('', { limit: 500 });
         if (listErr) logs.push('Error listando bucket: ' + JSON.stringify(listErr));
@@ -134,7 +130,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       });
     }
 
-    // headers map
+    // headers detection
     const headerMap = new Map<string,string>();
     Object.keys(rows[0] || {}).forEach(k => headerMap.set(k.toString().trim().toLowerCase(), k));
     const pick = (candidates: string[]) => {
@@ -170,7 +166,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       return 'UN';
     };
 
-    // agrupar filas
+    // group rows into products with stockPerSize
     const groups = new Map<string, { title: string; category: string|null; excelPrice: number|null; stockPerSize: Record<string,number> }>();
     for (const r of rows) {
       const rawProducto = String(r[colProducto] ?? '').trim();
@@ -200,12 +196,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
         stockPerSize: v.stockPerSize,
         hasstock: totalStock > 0,
         isVisible: true,
-        img: [],
+        img: [], // new products: empty images array (won't be used to overwrite existing products)
       });
     }
     logs.push(`Productos únicos: ${productsToUpsert.length}`);
 
-    // reset stocks
+    // reset stocks for all products (stockPerSize -> {}): intended behavior per spec
     logs.push('Reseteando stock de todos los productos (stockPerSize -> {})');
     {
       const { error: resetErr } = await supabaseAdmin
@@ -222,7 +218,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
     logs.push('Stocks reseteados.');
 
-    // buscar existentes por title (chunks)
+    // find existing products by title
     logs.push('Buscando productos existentes por título...');
     const titles = productsToUpsert.map(p => p.title);
     const CHUNK_TITLES = 50;
@@ -243,108 +239,172 @@ Deno.serve(async (req: Request): Promise<Response> => {
       (dataChunk || []).forEach((p: any) => existingMap.set(p.title, p));
     }
 
-    // separar inserts vs updates
+    // split into inserts vs updates (IMPORTANT: updates keep only safe fields)
     const insertsRaw: any[] = [];
     const updates: any[] = [];
     for (const p of productsToUpsert) {
       const existing = existingMap.get(p.title);
-      if (existing) updates.push({ id: existing.id, ...p });
-      else insertsRaw.push(p);
+      if (existing) {
+        updates.push({
+          id: existing.id,
+          stockPerSize: p.stockPerSize,
+          excelPrice: p.excelPrice,
+          hasstock: p.hasstock,
+          isVisible: p.isVisible
+        });
+      } else {
+        // keep img: [] for new products only (no risk to existing)
+        insertsRaw.push({
+          title: p.title,
+          category: p.category,
+          excelPrice: p.excelPrice,
+          stockPerSize: p.stockPerSize,
+          hasstock: p.hasstock,
+          isVisible: p.isVisible,
+          img: p.img
+        });
+      }
     }
     logs.push(`A insertar (raw): ${insertsRaw.length}, a actualizar: ${updates.length}`);
 
-    // sanitizar y dedupe inserts
+    // dedupe inserts by title
     const insertsByTitle = new Map<string, any>();
     for (const it of insertsRaw) {
       const titleKey = (it.title || '').toString().trim();
       if (!titleKey) continue;
-      const { id, ...rest } = it as any;
-      insertsByTitle.set(titleKey, rest);
+      insertsByTitle.set(titleKey, it);
     }
     const inserts = Array.from(insertsByTitle.values());
     logs.push(`A insertar (sanitizados y dedupe): ${inserts.length}`);
 
-    // configuración de batches y retries
-    const BATCH = Number(Deno.env.get('IMPORT_BATCH') || 100); // configurable por env
+    // batching config (más conservador para evitar payloads enormes)
+    const BATCH = Number(Deno.env.get('IMPORT_BATCH') || 50);
     const MAX_RETRIES = 3;
 
-    // helper: intentar upsert por chunk con retries, y fallback per-item si falla
-    async function tryUpsertChunk(table: string, chunk: any[], onConflict: string | string[] | undefined) {
+    // helper: bulk insert with fallback to upsert by title/title_ci on conflict
+    async function bulkInsertWithFallback(table: string, chunk: any[]) {
       let attempt = 0;
-      const conf = onConflict ? { onConflict } : undefined;
       while (attempt < MAX_RETRIES) {
         attempt++;
         try {
-          const q = supabaseAdmin.from(table).upsert(chunk, conf).select();
-          const { data, error } = await q;
+          const { data, error } = await supabaseAdmin.from(table).insert(chunk).select();
           if (error) throw error;
           return { ok: true, data };
         } catch (err: any) {
-          logs.push(`Upsert chunk error (attempt ${attempt}) - ${err?.message || String(err)}`);
-          // backoff
-          await sleep(300 * attempt);
+          logs.push(`Insert chunk error (attempt ${attempt}) - ${String(err?.message || err)}`);
+          await sleep(200 * attempt);
         }
       }
 
-      // fallback granular: intentar por item para aislar errores
-      logs.push('FALLBACK: intentando upsert uno-a-uno para diagnosticar/fallar por item...');
+      // fallback: try upsert by title_ci then title
+      try {
+        const { data, error } = await supabaseAdmin.from(table).upsert(chunk, { onConflict: 'title_ci' }).select();
+        if (!error) return { ok: true, data };
+      } catch (e: any) {
+        logs.push('Fallback upsert title_ci failed: ' + String(e?.message || e));
+      }
+
+      try {
+        const { data, error } = await supabaseAdmin.from(table).upsert(chunk, { onConflict: 'title' }).select();
+        if (!error) return { ok: true, data };
+      } catch (e: any) {
+        logs.push('Fallback upsert title failed: ' + String(e?.message || e));
+      }
+
+      // fallback granular
+      logs.push('Fallback granular insert/upsert por item (inserts)...');
       for (const item of chunk) {
         try {
-          const { data, error } = await supabaseAdmin.from(table).upsert(item, conf).select();
+          const { data, error } = await supabaseAdmin.from(table).insert(item).select();
           if (error) {
-            // si falla por item, intentamos insert o update como último recurso
-            logs.push(`Item upsert failed for item title='${item.title || ''}' id='${item.id || ''}': ${error.message}`);
-            // intentar insert (sin id) si no tiene id
-            if (!item.id) {
-              const { id, ...rest } = item;
-              const { data: insD, error: insErr } = await supabaseAdmin.from(table).insert(rest).select();
-              if (insErr) logs.push(`Insert fallback failed for title='${item.title || ''}': ${insErr.message}`);
-              else logs.push(`Insert fallback OK for title='${item.title || ''}'`);
-            } else {
-              // si tiene id, intentar update por id
-              const { id, ...rest } = item;
-              const { error: updErr } = await supabaseAdmin.from(table).update(rest).eq('id', id);
-              if (updErr) logs.push(`Update fallback failed id=${id}: ${updErr.message}`);
-              else logs.push(`Update fallback OK id=${id}`);
+            logs.push(`Insert item failed title='${item.title}': ${String(error.message || error)}`);
+            // try upsert as last resource
+            try {
+              const { data: udata, error: uerr } = await supabaseAdmin.from(table).upsert(item, { onConflict: 'title' }).select();
+              if (uerr) {
+                logs.push(`Upsert fallback item failed title='${item.title}': ${String(uerr.message || uerr)}`);
+              } else {
+                logs.push(`Upsert fallback item OK title='${item.title}'`);
+              }
+            } catch (e: any) {
+              logs.push(`Upsert fallback exception for title='${item.title}': ${String(e?.message || e)}`);
             }
           } else {
-            logs.push(`Item upsert OK (one-by-one) title='${item.title || ''}'`);
+            logs.push(`Insert item OK title='${item.title}'`);
           }
         } catch (e: any) {
-          logs.push(`Excepción item upsert: ${String(e?.message || e)}`);
+          logs.push(`Exception inserting item title='${item.title}': ${String(e?.message || e)}`);
         }
       }
 
       return { ok: false };
     }
 
-    // INSERTS (nuevos)
+    // helper: update chunk by id (safe: only updates specified fields)
+    async function updateChunkById(table: string, chunk: any[]) {
+      // perform per-item updates in parallel but limited to avoid bursts
+      const CONCURRENCY = 8;
+      let idx = 0;
+      async function worker() {
+        while (idx < chunk.length) {
+          const i = idx++;
+          const item = chunk[i];
+          const id = item.id;
+          if (!id) {
+            logs.push('Skipping update item without id');
+            continue;
+          }
+          const { id: _id, ...rest } = item;
+          let attempt = 0;
+          while (attempt < MAX_RETRIES) {
+            attempt++;
+            try {
+              const { error } = await supabaseAdmin.from(table).update(rest).eq('id', id);
+              if (error) throw error;
+              logs.push(`Update OK id=${id}`);
+              break;
+            } catch (err: any) {
+              logs.push(`Update id=${id} error (attempt ${attempt}): ${String(err?.message || err)}`);
+              await sleep(200 * attempt);
+              if (attempt === MAX_RETRIES) {
+                logs.push(`Update permanent fail id=${id}`);
+              }
+            }
+          }
+        }
+      }
+
+      // start workers
+      const workers = Array.from({ length: CONCURRENCY }, () => worker());
+      await Promise.all(workers);
+      return { ok: true };
+    }
+
+    // Process inserts (batch)
     if (inserts.length) {
-      logs.push(`Insertando/Upsert nuevos (batch ${BATCH})...`);
+      logs.push(`Insertando nuevos (batches de ${BATCH})...`);
       for (let i = 0; i < inserts.length; i += BATCH) {
         const chunk = inserts.slice(i, i + BATCH);
-        // intentar onConflict por title_ci primero (si existe), sino title
-        // intentaremos con 'title_ci' y si falla por constraint lo volveremos a intentar con 'title'
-        let res = await tryUpsertChunk('products', chunk, 'title_ci');
+        const res = await bulkInsertWithFallback('products', chunk);
         if (!res.ok) {
-          logs.push('Intentando fallback onConflict: "title"');
-          res = await tryUpsertChunk('products', chunk, 'title');
+          logs.push(`Insert chunk falló (pos ${i}) - se intentaron fallbacks por item.`);
+        } else {
+          logs.push(`Chunk inserts procesado: ${Math.min(i + BATCH, inserts.length)} / ${inserts.length}`);
         }
-        logs.push(`Chunk inserts procesado: ${Math.min(i + BATCH, inserts.length)} / ${inserts.length}`);
       }
     }
 
-    // UPDATES (existentes) - usamos upsert onConflict:'id' para batch update por PK
+    // Process updates (safe per-id updates)
     if (updates.length) {
-      logs.push(`Actualizando existentes (batch ${BATCH})...`);
+      logs.push(`Actualizando existentes (batches de ${BATCH}) con updates por id (seguro)...`);
       for (let i = 0; i < updates.length; i += BATCH) {
         const chunk = updates.slice(i, i + BATCH);
-        // chunk ya contiene id property
-        const res = await tryUpsertChunk('products', chunk, 'id');
-        if (!res.ok) {
-          logs.push(`Error en upsert updates chunk ${Math.floor(i / BATCH) + 1} - se intentaron fallbacks por item.`);
-        } else {
-          logs.push(`Chunk actualizado (upsert by id): ${Math.floor(i / BATCH) + 1} (${chunk.length})`);
+        // chunk items are { id, stockPerSize, excelPrice, hasstock, isVisible }
+        try {
+          await updateChunkById('products', chunk);
+          logs.push(`Chunk actualizado (by id): ${Math.floor(i / BATCH) + 1} (${chunk.length})`);
+        } catch (e: any) {
+          logs.push(`Error update chunk ${Math.floor(i / BATCH) + 1}: ${String(e?.message || e)}`);
         }
       }
     }
@@ -354,9 +414,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       status: 200,
       headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
     });
-
   } catch (err: any) {
-    // Atrapamos todo y retornamos logs completos al cliente para debug
     logs.push('Error general: ' + (err?.message || String(err)));
     try {
       return new Response(JSON.stringify({ ok: false, logs }), {
